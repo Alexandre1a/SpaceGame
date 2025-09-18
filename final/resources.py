@@ -9,6 +9,7 @@ FONTS = {
 IMAGES = {
     'gladius': 'gladius.png',
     'eagle':  'ship_eagle.png',
+    '400i': '400i.png',
 }
 
 
