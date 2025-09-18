@@ -19,7 +19,7 @@ class Game:
         # Define ships
         self.available_ships = [
             Ship("Gladius", self.images['gladius'], accel=400, max_speed=225, drag=0, turn_speed=52),
-            Ship("Aurora",  self.images['aurora'],  accel=350, max_speed=650, drag=0, turn_speed=200),
+            Ship("Aurora", self.images['aurora'], accel=400, max_speed=200, drag=0, turn_speed=500),
         ]
         self.selected_ship = None
 
