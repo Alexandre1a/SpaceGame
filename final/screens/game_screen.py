@@ -42,7 +42,9 @@ class GameScreen(Screen):
         font = self.game.fonts['default']
         fps = font.render(f"FPS: {self.game.clock.get_fps():.1f}", True, (200,200,50))
         speed = font.render(f"Speed: {self.ship.vel.length():.1f}", True, (0,255,255))
-        ztxt = font.render(f"Zoom: {self.zoom:.2f}×", True, (200,200,200))
+        zoom = font.render(f"Zoom: {self.zoom:.2f}×", True, (200,200,200))
+        shipInfo = font.render(f"Ship: {self.ship.name}", True, (200,100,30))
         surface.blit(fps,  (10,10))
-        surface.blit(speed,(10,35))
-        surface.blit(ztxt, (10,60))
+        surface.blit(speed,(10,30))
+        surface.blit(zoom, (10,50))
+        surface.blit(shipInfo, (10, 70))
