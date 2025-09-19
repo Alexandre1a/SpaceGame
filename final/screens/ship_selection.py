@@ -18,6 +18,7 @@ class ShipSelectionScreen(Screen):
             )
             self.buttons.append(btn)
 
+
     def select(self, ship):
         self.game.selected_ship = ship
         # Retour à l'écran titre après sélection

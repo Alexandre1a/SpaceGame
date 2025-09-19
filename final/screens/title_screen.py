@@ -14,7 +14,8 @@ class TitleScreen(Screen):
         self.buttons = [
             Button("Play",  (wf//2, hf//2 - 50), game.start_game,       font),
             Button("Ships", (wf//2, hf//2),      game.open_ship_selection, font),
-            Button("Exit",  (wf//2, hf//2 + 50), game.quit,             font),
+            Button("Settings", (wf//2, hf//2 + 50), game.open_settings, font),
+            Button("Exit",  (wf//2, hf//2 + 100), game.quit,             font),
         ]
 
 
