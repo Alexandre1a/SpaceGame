@@ -13,9 +13,10 @@ class GameScreen(Screen):
             Planet((-800, 500), 300, (200,150,50)),
         ]
 
-    def load_ship(self, ship):
+    def load_ship(self, ship, reset=True):
         self.ship = ship
-        self.ship.pos = pygame.Vector2(0,0)
+        if reset:  # Par défaut on remet à zéro
+            self.ship.pos = pygame.Vector2(0, 0)
 
     def handle_event(self, event): pass
 

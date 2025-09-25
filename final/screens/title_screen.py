@@ -12,7 +12,8 @@ class TitleScreen(Screen):
 
         # Création des trois boutons centrés
         self.buttons = [
-            Button("Play",  (wf//2, hf//2 - 50), game.start_game,       font),
+            Button("New Game",  (wf//2, hf//2 - 50), game.start_game,       font),
+            Button("Load Game", (wf//2, hf//2 - 100), game.load_game_from_file, font),
             Button("Ships", (wf//2, hf//2),      game.open_ship_selection, font),
             Button("Settings", (wf//2, hf//2 + 50), game.open_settings, font),
             Button("Exit",  (wf//2, hf//2 + 100), game.quit,             font),
