@@ -12,6 +12,7 @@ class PauseMenu(Screen):
             Button("Resume", (wf//2, hf//2 - 50), self.resume, font),
             Button("Save & Quit", (wf//2, hf//2), self.save_and_quit, font),
             Button("Main Menu", (wf//2, hf//2 + 50), game.go_to_menu, font),
+            Button("Quit to Desktop", (wf//2, hf//2 + 100), game.quit, font),
         ]
 
     def resume(self):

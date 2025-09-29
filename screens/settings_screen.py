@@ -9,37 +9,52 @@ class SettingsScreen(Screen):
         wf, hf = game.screen.get_width(), game.screen.get_height()
         font = self.game.fonts['default']
 
-        # charge les settings existants
-        self.settings = load_settings()
+        # Charge les settings existants depuis self.game.settings
+        # (au lieu de recharger depuis le fichier)
+        self.settings = self.game.settings.copy()
 
-        # index actuels pour parcourir les listes
+        # Index actuels pour parcourir les listes
         self.fps_index = AVAILABLE_FPS.index(self.settings["fps"])
         self.res_index = AVAILABLE_RESOLUTIONS.index(tuple(self.settings["resolution"]))
 
-        # boutons
+        # Boutons - ils seront centrés selon la résolution actuelle
         self.buttons = [
-            Button("Exit", (wf//2, hf//2 + 150), self.exit_settings, font),
+            Button("Apply & Exit", (wf//2, hf//2 + 150), self.exit_settings, font),
         ]
 
     def cycle_fps(self, direction):
+        """Change le FPS en parcourant la liste circulaire"""
         self.fps_index = (self.fps_index + direction) % len(AVAILABLE_FPS)
         self.settings["fps"] = AVAILABLE_FPS[self.fps_index]
 
     def cycle_res(self, direction):
+        """Change la résolution en parcourant la liste circulaire"""
         self.res_index = (self.res_index + direction) % len(AVAILABLE_RESOLUTIONS)
         self.settings["resolution"] = AVAILABLE_RESOLUTIONS[self.res_index]
 
     def toggle_fullscreen(self):
+        """Active/désactive le mode plein écran"""
         self.settings["fullscreen"] = not self.settings["fullscreen"]
 
     def exit_settings(self):
+        """Sauvegarde et applique les changements"""
+        # 1. Sauvegarder dans le fichier JSON
         save_settings(self.settings)
-        # applique immédiatement si tu veux changer la résolution
+        
+        # 2. Mettre à jour les settings dans l'objet Game
+        self.game.settings = self.settings.copy()
+        
+        # 3. Appliquer les changements de résolution
         flags = pygame.FULLSCREEN if self.settings["fullscreen"] else 0
         self.game.screen = pygame.display.set_mode(
             self.settings["resolution"], flags
         )
-        self.game.go_to_menu()
+        
+        # 4. IMPORTANT : Recréer tous les écrans pour recalculer les positions
+        self.game.rebuild_screens()
+        
+        # 5. Retourner au menu (le nouveau menu avec les bonnes positions)
+        self.game.current_screen = self.game.title_screen
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -61,27 +76,27 @@ class SettingsScreen(Screen):
         surface.fill((20, 20, 40))
         font = self.game.fonts['default']
 
-        # titre
+        # Titre - toujours centré grâce au calcul dynamique
         title = font.render("Settings", True, (200, 200, 255))
         surface.blit(title, (surface.get_width()//2 - title.get_width()//2, 80))
 
-        # affichage FPS
+        # Affichage FPS
         fps_text = "Unlimited" if self.settings["fps"] == 0 else str(self.settings["fps"])
         fps_label = font.render(f"FPS: {fps_text} (← →)", True, (255, 255, 255))
         surface.blit(fps_label, (surface.get_width()//2 - fps_label.get_width()//2, 200))
 
-        # affichage résolution
+        # Affichage résolution
         w, h = self.settings["resolution"]
         res_label = font.render(f"Resolution: {w}x{h} (↑ ↓)", True, (255, 255, 255))
         surface.blit(res_label, (surface.get_width()//2 - res_label.get_width()//2, 250))
 
-        # affichage fullscreen
+        # Affichage fullscreen
         fs_label = font.render(
             f"Fullscreen: {'ON' if self.settings['fullscreen'] else 'OFF'} (press F)",
             True, (255, 255, 255)
         )
         surface.blit(fs_label, (surface.get_width()//2 - fs_label.get_width()//2, 300))
 
-        # boutons
+        # Boutons
         for btn in self.buttons:
             btn.render(surface)
