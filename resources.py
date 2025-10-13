@@ -1,15 +1,15 @@
 import pygame
 import os
 
-ASSET_DIR = os.path.join(os.path.dirname(__file__), 'assets')
+ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
 
 FONTS = {
-    'default': ('Consolas', 18),
+    "default": ("Consolas", 18),
 }
 IMAGES = {
-    'gladius': 'gladius.png',
-    'aurora':  'aurora.jpg',
-    '400i': '400i.jpg',
+    "gladius": "gladius.png",
+    "aurora": "aurora.jpg",
+    "400i": "400i.jpg",
 }
 
 
