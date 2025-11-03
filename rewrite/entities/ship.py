@@ -15,6 +15,60 @@ class ShipControls:
         self.turn_left = False  # Tourner à gauche
         self.turn_right = False  # Tourner à droite
 
+# Controllers (IA et Joueur)
+class KeyboardController:
+    """Convertit les entrées clavier en commandes de vaisseau."""
+    
+    def get_controls(self, keys):
+        """
+        Lit l'état du clavier et retourne un objet ShipControls.
+        """
+        controls = ShipControls()
+        controls.thrust = keys[pygame.K_z]
+        controls.brake = keys[pygame.K_x]
+        controls.turn_left = keys[pygame.K_q]
+        controls.turn_right = keys[pygame.K_d]
+        return controls
+
+class SimpleAIController:
+    """
+    Contrôleur IA basique qui poursuit une cible.
+    """
+    def __init__(self, target_pos):
+        self.target_pos = target_pos
+    
+    def get_controls(self, ship):
+        """
+        Calcule les commandes pour diriger le vaisseau vers la cible.
+        """
+        controls = ShipControls()
+        
+        # Calculer la direction vers la cible
+        to_target = self.target_pos - ship.pos
+        
+        # Si on est proche, on arrête
+        if to_target.length() < 50:
+            controls.brake = True
+            return controls
+        
+        # Calculer l'angle vers la cible
+        target_angle = math.degrees(math.atan2(to_target.y, to_target.x)) + 90
+        target_angle %= 360
+        
+        # Calculer la différence d'angle
+        angle_diff = (target_angle - ship.angle + 180) % 360 - 180
+        
+        # Tourner vers la cible
+        if angle_diff < -5:
+            controls.turn_left = True
+        elif angle_diff > 5:
+            controls.turn_right = True
+        
+        # Accélérer si on pointe approximativement vers la cible
+        if abs(angle_diff) < 30:
+            controls.thrust = True
+        
+        return controls
 
 class Ship:
     def __init__(self, name, sprite, accel, maxSpeed, drag, turnSpeed):
@@ -25,7 +79,7 @@ class Ship:
         self.sprite = sprite
         self.acceleration = accel
         self.maxSpeed = maxSpeed
-        # self.drag = drag
+        self.drag = drag
         self.turnSpeed = turnSpeed
 
         # Etat du vaisseau

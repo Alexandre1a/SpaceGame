@@ -2,7 +2,18 @@
 import pygame
 
 # Importe les sous-modules personalisés
-pass
+from ressources import loadFonts, loadImages
+from entities.ship import Ship, KeyboardController
+# Screens
+from screens.title_screen import TitleScreen
+from screens.ship_selection import ShipSelectionScreen
+from screens.game_screen import GameScreen
+from screens.settings_screen import SettingsScreen
+from screens.pause_menu import PauseMenu
+# Utilitaires
+from utils.settings_manager import loadSettings, saveSettings
+from utils.save_manager import loadSave
+
 
 
 class Game:
@@ -13,10 +24,11 @@ class Game:
         """
         # Initialise pygame
         pygame.init()
+        self.clock = pygame.time.Clock()
         # Charge les paramètres et la sauvegarde
         self.settings = loadSettings()
-        self.save = loadSave()
-        self.money = self.save["money"]
+        #self.save = loadSave()
+        #self.money = self.save["money"]
 
         # Charge les assets
         self.images = loadImages()
@@ -42,3 +54,35 @@ class Game:
         # Défini le titre de la fenêtre
         pygame.display.set_caption("SpaceGame")
         # self.clock = pygame.time.Clock()
+
+        # Crée le controller (Après le chargement de menu)
+        controller = KeyboardController()
+
+        self.current_screen = TitleScreen(self)
+
+
+    def run(self):
+        while True:
+            dt = self.clock.tick(self.settings["fps"]) / 1000.0
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.quit()
+                if event.type == pygame.KEYDOWN:
+                    if (
+                        event.key == pygame.K_p
+                        and self.current_screen == self.game_screen
+                    ):
+                        # Toggle pause
+                        self.current_screen = self.pause_screen
+            
+            self.current_screen.handle_event(event)
+
+        self.current_screen.update(dt)
+        self.current_screen.render(self.screen)
+        pygame.display.filp()
+
+
+
+
+if __name__ == "__main__":
+    Game().run()
