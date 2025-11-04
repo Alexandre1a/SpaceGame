@@ -12,12 +12,20 @@ class Button:
     Change de couleur au survol et exécute une fonction callback au clic.
     """
 
-    def __init__(self, text, centerPos, callback, font,
-                 padding=(10, 5), idleColor=(200, 200, 200),
-                 hoverColor=(255, 255, 255), textColor=(0, 0, 0)):
+    def __init__(
+        self,
+        text,
+        centerPos,
+        callback,
+        font,
+        padding=(10, 5),
+        idleColor=(200, 200, 200),
+        hoverColor=(255, 255, 255),
+        textColor=(0, 0, 0),
+    ):
         """
         Initialise un bouton.
-        
+
         Args:
             text: Texte affiché sur le bouton
             centerPos: Position du centre du bouton (tuple x, y)
@@ -64,13 +72,13 @@ class Button:
     def setText(self, text):
         """
         Change le texte du bouton et recalcule sa taille.
-        
+
         Args:
             text: Nouveau texte à afficher
         """
         self._text = text
         self._textSurface = self._font.render(self._text, True, self._textColor)
-        
+
         # Recalculer la taille du bouton
         oldCenter = self._rect.center
         width = self._textSurface.get_width() + self._padding[0] * 2
@@ -81,7 +89,7 @@ class Button:
     def setPosition(self, centerPos):
         """
         Change la position du bouton.
-        
+
         Args:
             centerPos: Nouvelle position du centre (tuple x, y)
         """
@@ -90,7 +98,7 @@ class Button:
     def setCallback(self, callback):
         """
         Change la fonction callback du bouton.
-        
+
         Args:
             callback: Nouvelle fonction à appeler au clic
         """
@@ -101,7 +109,7 @@ class Button:
     def handleEvent(self, event):
         """
         Gère les événements pour ce bouton.
-        
+
         Args:
             event: Événement pygame à traiter
         """
@@ -115,6 +123,7 @@ class Button:
         if self._callback:
             try:
                 self._callback()
+                print(f"[Button] Exécution du callback : {self._callback}")
             except Exception as e:
                 print(f"[Button] Erreur lors de l'exécution du callback : {e}")
 
@@ -123,7 +132,7 @@ class Button:
     def render(self, surface):
         """
         Affiche le bouton à l'écran.
-        
+
         Args:
             surface: Surface pygame sur laquelle dessiner
         """
@@ -140,16 +149,13 @@ class Button:
         pygame.draw.rect(surface, borderColor, self._rect, 2)
 
         # Afficher le texte centré
-        textPos = (
-            self._rect.x + self._padding[0],
-            self._rect.y + self._padding[1]
-        )
+        textPos = (self._rect.x + self._padding[0], self._rect.y + self._padding[1])
         surface.blit(self._textSurface, textPos)
 
     def isHovered(self):
         """
         Vérifie si la souris survole le bouton.
-        
+
         Returns:
             True si la souris est sur le bouton, False sinon
         """

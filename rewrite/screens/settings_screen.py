@@ -1,16 +1,11 @@
 """
 Écran des paramètres du jeu.
-Permet de modifier la résolution, le FPS et le mode plein écran.
+Permet de modifier la résolution, le framerate et le mode plein écran.
 """
 
 import pygame
 from screens.base_screen import Screen
 from ui.button import Button
-from utils.settings_manager import (
-    saveSettings,
-    AVAILABLE_FPS,
-    AVAILABLE_RESOLUTIONS
-)
 
 
 class SettingsScreen(Screen):
@@ -19,43 +14,43 @@ class SettingsScreen(Screen):
     Permet de modifier les options graphiques et de performance.
     """
 
-    def __init__(self, game):
+    def __init__(self, game, width, height, font):
         """
         Initialise l'écran des paramètres.
-        
+
         Args:
             game: Référence vers l'objet Game principal
         """
-        self._game = game
-        
-        # Récupération des dimensions de l'écran
-        screenWidth = game.getScreen().get_width()
-        screenHeight = game.getScreen().get_height()
-        
+        self.game = game
+        self.width = width
+        self.height = height
+
         # Récupération de la police
-        font = game.getFonts()['default']
+        self._font = font
 
         # Copie des paramètres actuels pour modification
         self._settings = game.getSettings().copy()
 
         # Index actuels dans les listes de valeurs possibles
         self._fpsIndex = AVAILABLE_FPS.index(self._settings["fps"])
-        self._resIndex = AVAILABLE_RESOLUTIONS.index(tuple(self._settings["resolution"]))
+        self._resIndex = AVAILABLE_RESOLUTIONS.index(
+            tuple(self._settings["resolution"])
+        )
 
         # Bouton pour appliquer et sortir
         self._applyButton = Button(
             "Appliquer et Quitter",
-            (screenWidth // 2, screenHeight // 2 + 150),
+            (width // 2, height // 2 + 150),
             self._exitSettings,
-            font
+            font,
         )
 
         # Bouton pour réinitialiser
         self._resetButton = Button(
             "Réinitialiser",
-            (screenWidth // 2, screenHeight // 2 + 200),
+            (width // 2, height // 2 + 200),
             self._resetSettings,
-            font
+            font,
         )
 
         self._font = font
@@ -63,7 +58,7 @@ class SettingsScreen(Screen):
     def _cycleFPS(self, direction):
         """
         Change le FPS en parcourant la liste circulaire.
-        
+
         Args:
             direction: 1 pour augmenter, -1 pour diminuer
         """
@@ -73,7 +68,7 @@ class SettingsScreen(Screen):
     def _cycleResolution(self, direction):
         """
         Change la résolution en parcourant la liste circulaire.
-        
+
         Args:
             direction: 1 pour augmenter, -1 pour diminuer
         """
@@ -87,29 +82,34 @@ class SettingsScreen(Screen):
     def _resetSettings(self):
         """Réinitialise les paramètres aux valeurs par défaut"""
         from utils.settings_manager import DEFAULT_SETTINGS
+
         self._settings = DEFAULT_SETTINGS.copy()
         self._fpsIndex = AVAILABLE_FPS.index(self._settings["fps"])
-        self._resIndex = AVAILABLE_RESOLUTIONS.index(tuple(self._settings["resolution"]))
+        self._resIndex = AVAILABLE_RESOLUTIONS.index(
+            tuple(self._settings["resolution"])
+        )
         print("[SettingsScreen] Paramètres réinitialisés")
 
     def _exitSettings(self):
         """Applique les paramètres et retourne au menu"""
         # Sauvegarder dans le fichier
         saveSettings(self._settings)
-        
+
         # Mettre à jour les paramètres dans l'objet Game
         oldResolution = self._game.getSettings()["resolution"]
         self._game._settings = self._settings.copy()
-        
+
         # Appliquer les changements de résolution si nécessaire
         newResolution = self._settings["resolution"]
-        if oldResolution != newResolution or self._settings["fullscreen"] != self._game.getSettings().get("fullscreen"):
+        if oldResolution != newResolution or self._settings[
+            "fullscreen"
+        ] != self._game.getSettings().get("fullscreen"):
             flags = pygame.FULLSCREEN if self._settings["fullscreen"] else 0
             self._game._screen = pygame.display.set_mode(newResolution, flags)
-            
+
             # Reconstruire tous les écrans avec les nouvelles dimensions
             self._game.rebuildScreens()
-        
+
         # Retourner au menu
         self._game.goToMenu()
         print("[SettingsScreen] Paramètres appliqués")
@@ -117,7 +117,7 @@ class SettingsScreen(Screen):
     def handleEvent(self, event):
         """
         Gère les événements de l'écran des paramètres.
-        
+
         Args:
             event: Événement pygame à traiter
         """
@@ -144,7 +144,7 @@ class SettingsScreen(Screen):
     def update(self, dt):
         """
         Met à jour la logique de l'écran des paramètres.
-        
+
         Args:
             dt: Delta time
         """
@@ -154,7 +154,7 @@ class SettingsScreen(Screen):
     def render(self, surface):
         """
         Affiche l'écran des paramètres.
-        
+
         Args:
             surface: Surface pygame sur laquelle dessiner
         """
@@ -162,7 +162,7 @@ class SettingsScreen(Screen):
         surface.fill((20, 20, 40))
 
         # Titre
-        titleFont = self._game.getFonts().get('title', self._font)
+        titleFont = self._game.getFonts().get("title", self._font)
         titleText = titleFont.render("PARAMÈTRES", True, (200, 200, 255))
         titleRect = titleText.get_rect(center=(surface.get_width() // 2, 80))
         surface.blit(titleText, titleRect)
@@ -172,12 +172,10 @@ class SettingsScreen(Screen):
         startY = 200
 
         # === OPTION FPS ===
-        fpsValue = "Illimité" if self._settings["fps"] == 0 else str(self._settings["fps"])
-        fpsText = self._font.render(
-            f"FPS: {fpsValue}",
-            True,
-            (255, 255, 255)
+        fpsValue = (
+            "Illimité" if self._settings["fps"] == 0 else str(self._settings["fps"])
         )
+        fpsText = self._font.render(f"FPS: {fpsValue}", True, (255, 255, 255))
         fpsRect = fpsText.get_rect(center=(centerX, startY))
         surface.blit(fpsText, fpsRect)
 
@@ -189,9 +187,7 @@ class SettingsScreen(Screen):
         # === OPTION RÉSOLUTION ===
         width, height = self._settings["resolution"]
         resText = self._font.render(
-            f"Résolution: {width}x{height}",
-            True,
-            (255, 255, 255)
+            f"Résolution: {width}x{height}", True, (255, 255, 255)
         )
         resRect = resText.get_rect(center=(centerX, startY + 80))
         surface.blit(resText, resRect)
@@ -203,19 +199,13 @@ class SettingsScreen(Screen):
 
         # === OPTION PLEIN ÉCRAN ===
         fsStatus = "ON" if self._settings["fullscreen"] else "OFF"
-        fsText = self._font.render(
-            f"Plein écran: {fsStatus}",
-            True,
-            (255, 255, 255)
-        )
+        fsText = self._font.render(f"Plein écran: {fsStatus}", True, (255, 255, 255))
         fsRect = fsText.get_rect(center=(centerX, startY + 160))
         surface.blit(fsText, fsRect)
 
         # Touche pour basculer
         fsHintText = self._font.render(
-            "(Appuyez sur F pour basculer)",
-            True,
-            (120, 120, 120)
+            "(Appuyez sur F pour basculer)", True, (120, 120, 120)
         )
         fsHintRect = fsHintText.get_rect(center=(centerX, startY + 190))
         surface.blit(fsHintText, fsHintRect)
@@ -229,9 +219,9 @@ class SettingsScreen(Screen):
             "Utilisez les flèches ← → pour changer le FPS",
             "Utilisez les flèches ↑ ↓ pour changer la résolution",
             "Appuyez sur F pour activer/désactiver le plein écran",
-            "Échap pour annuler"
+            "Échap pour annuler",
         ]
-        
+
         yOffset = surface.get_height() - 120
         for instruction in instructions:
             instText = self._font.render(instruction, True, (100, 100, 100))

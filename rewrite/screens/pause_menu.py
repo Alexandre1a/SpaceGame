@@ -2,34 +2,41 @@ import pygame
 from screens.base_screen import Screen
 from ui.button import Button
 
+
 class PauseMenu(Screen):
-    def __init__(self, game):
+    def __init__(self, game, width, height, font):
+        """
+        Initialise l'écran de pause.
+
+        Args:
+            game: Référence vers l'objet Game principal
+        """
         self.game = game
-        wf, hf = game.screen.get_size()
-        font = game.fonts['default']
+        self.width = width
+        self.height = height
 
         self.buttons = [
-            Button("Resume", (wf//2, hf//2 - 50), self.resume, font),
-            Button("Save & Quit", (wf//2, hf//2), self.save_and_quit, font),
-            Button("Main Menu", (wf//2, hf//2 + 50), game.go_to_menu, font),
-            Button("Quit to Desktop", (wf//2, hf//2 + 100), game.quit, font),
+            Button("Resume", (width // 2, height // 2 - 50), self.resume, font),
+            Button("Save & Quit", (width // 2, height // 2), self.saveAndQuit, font),
+            Button("Main Menu", (width // 2, height // 2 + 50), game.displayMenu, font),
+            Button("Quit to Desktop", (width // 2, height // 2 + 100), game.quit, font),
         ]
 
     def resume(self):
-        self.game.current_screen = self.game.game_screen
+        self.game.current_screen = self.game.gameScreen
 
-    def save_and_quit(self):
-        self.game.save_game()
-        self.game.go_to_menu()
+    def saveAndQuit(self):
+        self.game.saveGame()
+        self.game.displayMenu()
 
-    def handle_event(self, event):
+    def handleEvent(self, event):
         for btn in self.buttons:
-            btn.handle_event(event)
+            btn.handleEvent(event)
 
     def render(self, surface):
         surface.fill((0, 0, 0))
-        font = self.game.fonts['default']
+        font = self.game.fonts["default"]
         text = font.render("Pause", True, (255, 255, 255))
-        surface.blit(text, (surface.get_width()//2 - 40, 100))
+        surface.blit(text, (surface.get_width() // 2 - 40, 100))
         for btn in self.buttons:
             btn.render(surface)

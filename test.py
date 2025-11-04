@@ -2,12 +2,14 @@ import pygame
 import math
 import sys
 
+
 class ShipControls:
     def __init__(self):
         self.thrust = False
         self.brake = False
         self.turn_left = False
         self.turn_right = False
+
 
 class KeyboardController:
     def get_controls(self):
@@ -19,44 +21,46 @@ class KeyboardController:
         controls.turn_right = keys[pygame.K_d] or keys[pygame.K_RIGHT]
         return controls
 
+
 class SimpleAIController:
     """
     Contrôleur IA basique qui poursuit une cible.
     """
+
     def __init__(self, target_pos):
         self.target_pos = target_pos
-    
+
     def get_controls(self, ship):
         """
         Calcule les commandes pour diriger le vaisseau vers la cible.
         """
         controls = ShipControls()
-        
+
         # Calculer la direction vers la cible
         to_target = self.target_pos - ship.pos
-        
+
         # Si on est proche, on arrête
         if to_target.length() < 50:
             controls.brake = True
             return controls
-        
+
         # Calculer l'angle vers la cible
         target_angle = math.degrees(math.atan2(to_target.y, to_target.x)) + 90
         target_angle %= 360
-        
+
         # Calculer la différence d'angle
         angle_diff = (target_angle - ship.angle + 180) % 360 - 180
-        
+
         # Tourner vers la cible
         if angle_diff < -5:
             controls.turn_left = True
         elif angle_diff > 5:
             controls.turn_right = True
-        
+
         # Accélérer si on pointe approximativement vers la cible
         if abs(angle_diff) < 30:
             controls.thrust = True
-        
+
         return controls
 
 
@@ -126,12 +130,12 @@ class Ship:
         surface.blit(rotated_sprite, rect)
 
 
-
 # Initialisation Pygame
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Vaisseau Spatial")
 clock = pygame.time.Clock()
+
 
 # Création du sprite du vaisseau (triangle)
 def create_ship_sprite():
@@ -140,24 +144,25 @@ def create_ship_sprite():
     pygame.draw.polygon(surface, (255, 255, 255), points)
     return surface
 
+
 # Création des objets
 ship_sprite = create_ship_sprite()
 ship1 = Ship(
     name="Vaisseau",
     sprite=ship_sprite,
-    accel=20,       # Accélération forte
-    maxSpeed=145512,    # Vitesse max modérée
-    drag=0,      # Faible traînée
-    turnSpeed=180    # Rotation rapide
+    accel=200,  # Accélération forte
+    maxSpeed=145512,  # Vitesse max modérée
+    drag=0,  # Faible traînée
+    turnSpeed=180,  # Rotation rapide
 )
 
 ship2 = Ship(
     name="Vaisseau",
     sprite=ship_sprite,
-    accel=200,       # Accélération forte
-    maxSpeed=300,    # Vitesse max modérée
-    drag=0,      # Faible traînée
-    turnSpeed=180    # Rotation rapide
+    accel=200,  # Accélération forte
+    maxSpeed=300,  # Vitesse max modérée
+    drag=0,  # Faible traînée
+    turnSpeed=180,  # Rotation rapide
 )
 
 controller = KeyboardController()
@@ -167,32 +172,33 @@ ai = SimpleAIController(ship1.pos)
 running = True
 while running:
     dt = clock.tick(60) / 1000.0  # Delta-time en secondes
-    
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
+
     # Récupération des commandes
     controls = controller.get_controls()
     aiControls = ai.get_controls(ship2)
-    
+
     # Mise à jour du vaisseau
     ship1.update(dt, controls)
     ship2.update(dt, aiControls)
 
-    
     # Rendu
     screen.fill((0, 0, 0))
     ship1.render(screen)
     ship2.render(screen)
-    
+
     # Affichage des informations
     font = pygame.font.Font(None, 36)
-    speed_text = font.render(f"Vitesse: {ship1.vel.length():.1f}", True, (255, 255, 255))
+    speed_text = font.render(
+        f"Vitesse: {ship1.vel.length():.1f}", True, (255, 255, 255)
+    )
     angle_text = font.render(f"Angle: {ship1.angle:.1f}°", True, (255, 255, 255))
     screen.blit(speed_text, (10, 10))
     screen.blit(angle_text, (10, 50))
-    
+
     pygame.display.flip()
 
 pygame.quit()

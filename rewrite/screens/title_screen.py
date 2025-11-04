@@ -13,69 +13,55 @@ class TitleScreen(Screen):
     Écran titre affichant le menu principal du jeu.
     """
 
-    def __init__(self, game):
+    def __init__(self, game, width, height, font):
         """
         Initialise l'écran titre.
-        
+
         Args:
             game: Référence vers l'objet Game principal
         """
+        # Utilisé plus tard pour l'affichage
         self._game = game
-        
-        # Récupération des dimensions de l'écran
-        screenWidth = game.getScreen().get_width()
-        screenHeight = game.getScreen().get_height()
-        
-        # Récupération de la police par défaut
-        font = game.getFonts()['default']
-        titleFont = game.getFonts().get('title', font)
+        self._font = font
 
+        # Récupération des dimensions de l'écran
+        self._fontTitle = game.fonts["title"]
         # Position verticale de départ pour les boutons
-        centerX = screenWidth // 2
-        startY = screenHeight // 2 - 100
+        centerX = width // 2
+        startY = height // 2 - 100
 
         # Création des boutons du menu
         self._buttons = [
             Button(
-                "Nouvelle Partie",
+                "Jouer",
                 (centerX, startY),
-                game.startGame,
-                font
-            ),
-            Button(
-                "Charger Partie",
-                (centerX, startY + 60),
-                game.loadGameFromFile,
-                font
+                game.displayStartOptions,
+                font,
             ),
             Button(
                 "Sélection Vaisseau",
-                (centerX, startY + 120),
-                game.openShipSelection,
-                font
+                (centerX, startY + 60),
+                game.displayShipSelection,
+                font,
             ),
             Button(
                 "Paramètres",
-                (centerX, startY + 180),
-                game.openSettings,
-                font
+                (centerX, startY + 120),
+                game.displaySettingsScreen,
+                font,
             ),
             Button(
                 "Quitter",
-                (centerX, startY + 240),
+                (centerX, startY + 180),
                 game.quit,
-                font
+                font,
             ),
         ]
-
-        # Stockage des polices pour le rendu
-        self._font = font
-        self._titleFont = titleFont
 
     def handleEvent(self, event):
         """
         Gère les événements de l'écran titre.
-        
+
         Args:
             event: Événement pygame à traiter
         """
@@ -86,7 +72,7 @@ class TitleScreen(Screen):
     def update(self, dt):
         """
         Met à jour la logique de l'écran titre.
-        
+
         Args:
             dt: Delta time (temps écoulé depuis la dernière frame)
         """
@@ -96,7 +82,7 @@ class TitleScreen(Screen):
     def render(self, surface):
         """
         Effectue le rendu de l'écran titre.
-        
+
         Args:
             surface: Surface pygame sur laquelle dessiner
         """
@@ -104,7 +90,7 @@ class TitleScreen(Screen):
         surface.fill((5, 5, 20))
 
         # === TITRE DU JEU ===
-        titleText = self._titleFont.render("SPACE GAME", True, (100, 200, 255))
+        titleText = self._fontTitle.render("SPACE GAME", True, (100, 200, 255))
         titleRect = titleText.get_rect(center=(surface.get_width() // 2, 80))
         surface.blit(titleText, titleRect)
 
@@ -113,14 +99,14 @@ class TitleScreen(Screen):
         moneyText = self._font.render(
             f"Crédits disponibles : {money:,} ¢",
             True,
-            (255, 215, 0)  # Couleur or
+            (255, 215, 0),  # Couleur or
         )
         moneyRect = moneyText.get_rect(center=(surface.get_width() // 2, 150))
-        
+
         # Fond semi-transparent pour le texte d'argent
         bgRect = moneyRect.inflate(20, 10)
         bgSurface = pygame.Surface(bgRect.size, pygame.SRCALPHA)
-        bgSurface.fill((0, 0, 0, 128))  # Noir semi-transparent
+        bgSurface.fill((255, 255, 0, 128))  # Noir semi-transparent
         surface.blit(bgSurface, bgRect)
         surface.blit(moneyText, moneyRect)
 
@@ -128,11 +114,10 @@ class TitleScreen(Screen):
         selectedShip = self._game.getSelectedShip()
         if selectedShip:
             shipName = selectedShip.getName()
-            brand = selectedShip.getBrand()
-            shipInfoText = f"Vaisseau : {brand} {shipName}"
+            shipInfoText = f"Vaisseau : {shipName}"
         else:
             shipInfoText = "Aucun vaisseau sélectionné"
-        
+
         shipText = self._font.render(shipInfoText, True, (150, 150, 255))
         shipRect = shipText.get_rect(center=(surface.get_width() // 2, 200))
         surface.blit(shipText, shipRect)
@@ -143,5 +128,7 @@ class TitleScreen(Screen):
 
         # === VERSION DU JEU ===
         versionText = self._font.render("v1.0.0", True, (80, 80, 80))
-        versionRect = versionText.get_rect(bottomright=(surface.get_width() - 10, surface.get_height() - 10))
+        versionRect = versionText.get_rect(
+            bottomright=(surface.get_width() - 10, surface.get_height() - 10)
+        )
         surface.blit(versionText, versionRect)

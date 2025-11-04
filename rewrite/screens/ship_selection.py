@@ -14,93 +14,85 @@ class ShipSelectionScreen(Screen):
     Affiche la liste des vaisseaux disponibles avec leurs caractéristiques.
     """
 
-    def __init__(self, game):
+    def __init__(self, game, width, height, font, titleFont):
         """
         Initialise l'écran de sélection de vaisseau.
-        
+
         Args:
             game: Référence vers l'objet Game principal
         """
         self._game = game
-        
-        # Récupération des dimensions de l'écran
-        screenWidth = game.getScreen().get_width()
-        screenHeight = game.getScreen().get_height()
-        
+        self.titleFont = titleFont
+
         # Récupération des polices
-        font = game.getFonts()['default']
-        
+        self._font = font
         # Création des boutons pour chaque vaisseau disponible
         self._buttons = []
-        availableShips = game.getAvailableShips()
-        
+        self.availableShips = game.getAvailableShips()
+
         startY = 200
         spacing = 80
-        
-        for i, ship in enumerate(availableShips):
-            # Nom affiché : Marque + Nom du vaisseau
-            displayName = f"{ship.getBrand()} {ship.getName()}"
-            
+
+        for i, ship in enumerate(self.availableShips):
+            # Nom affiché : Nom du vaisseau
+            displayName = f"{ship.getName()}"
+
             button = Button(
                 displayName,
-                (screenWidth // 2, startY + i * spacing),
+                (width // 2, startY + i * spacing),
                 lambda s=ship: self._selectShip(s),
-                font
+                self._font,
             )
             self._buttons.append(button)
-        
+
         # Bouton retour
         self._backButton = Button(
-            "Retour",
-            (screenWidth // 2, screenHeight - 80),
-            game.goToMenu,
-            font
+            "Retour", (width // 2, height - 80), game.displayMenu, self._font
         )
-        
-        self._font = font
+
         self._selectedForPreview = None  # Vaisseau survolé pour l'aperçu
 
     def _selectShip(self, ship):
         """
         Sélectionne un vaisseau et retourne au menu principal.
-        
+
         Args:
             ship: Le vaisseau sélectionné
         """
         self._game.setSelectedShip(ship)
-        print(f"[ShipSelection] Vaisseau sélectionné : {ship.getBrand()} {ship.getName()}")
-        self._game.goToMenu()
+        print(f"[ShipSelection] Vaisseau sélectionné : {ship.getName()}")
+        self._game.displayMenu()
 
     def handleEvent(self, event):
         """
         Gère les événements de l'écran de sélection.
-        
+
         Args:
             event: Événement pygame à traiter
         """
         # Touche Échap pour retourner au menu
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                self._game.goToMenu()
+                self._game.displayMenu()
                 return
 
         # Gestion des clics sur les boutons
         for button in self._buttons:
             button.handleEvent(event)
-        
+
         self._backButton.handleEvent(event)
 
     def update(self, dt):
         """
         Met à jour la logique de l'écran de sélection.
-        
+
         Args:
             dt: Delta time
         """
         # Détecter le vaisseau survolé pour l'aperçu
         availableShips = self._game.getAvailableShips()
         self._selectedForPreview = None
-        
+
         for i, button in enumerate(self._buttons):
             if button.isHovered() and i < len(availableShips):
                 self._selectedForPreview = availableShips[i]
@@ -109,7 +101,7 @@ class ShipSelectionScreen(Screen):
     def render(self, surface):
         """
         Affiche l'écran de sélection de vaisseau.
-        
+
         Args:
             surface: Surface pygame sur laquelle dessiner
         """
@@ -117,7 +109,7 @@ class ShipSelectionScreen(Screen):
         surface.fill((15, 15, 35))
 
         # Titre
-        titleFont = self._game.getFonts().get('title', self._font)
+        titleFont = self.titleFont
         titleText = titleFont.render("SÉLECTION DE VAISSEAU", True, (150, 200, 255))
         titleRect = titleText.get_rect(center=(surface.get_width() // 2, 80))
         surface.blit(titleText, titleRect)
@@ -137,7 +129,7 @@ class ShipSelectionScreen(Screen):
         instructionText = self._font.render(
             "Cliquez sur un vaisseau pour le sélectionner | Échap pour retour",
             True,
-            (120, 120, 120)
+            (120, 120, 120),
         )
         instructionRect = instructionText.get_rect(
             center=(surface.get_width() // 2, surface.get_height() - 30)
@@ -147,7 +139,7 @@ class ShipSelectionScreen(Screen):
     def _renderShipPreview(self, surface, ship):
         """
         Affiche un aperçu des caractéristiques du vaisseau.
-        
+
         Args:
             surface: Surface sur laquelle dessiner
             ship: Vaisseau à afficher
@@ -163,9 +155,7 @@ class ShipSelectionScreen(Screen):
 
         # Nom du vaisseau
         nameText = self._font.render(
-            f"{ship.getBrand()} {ship.getName()}",
-            True,
-            (255, 255, 255)
+            f"{ship.getBrand()} {ship.getName()}", True, (255, 255, 255)
         )
         surface.blit(nameText, (previewX, previewY))
 
@@ -174,7 +164,6 @@ class ShipSelectionScreen(Screen):
         stats = [
             f"Accélération: {ship.getAcceleration():.0f}",
             f"Vitesse max: {ship.getMaxSpeed():.0f}",
-            f"Traînée: {ship.getDrag():.3f}",
             f"Rotation: {ship.getTurnSpeed():.0f}°/s",
         ]
 

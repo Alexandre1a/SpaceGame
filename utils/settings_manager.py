@@ -4,7 +4,15 @@ import os
 SETTINGS_FILE = "settings.json"
 
 # valeurs possibles
-AVAILABLE_FPS = [30, 60, 120, 144, 240, 0]  # 0 = illimité
+AVAILABLE_FPS = [
+    24,
+    30,
+    60,
+    120,
+    144,
+    240,
+    380,
+]  # 0 = illimité
 AVAILABLE_RESOLUTIONS = [
     (800, 600),
     (1280, 720),
@@ -20,6 +28,7 @@ DEFAULT_SETTINGS = {
     "resolution": (800, 600),
 }
 
+
 def load_settings():
     if os.path.exists(SETTINGS_FILE):
         with open(SETTINGS_FILE, "r") as f:
@@ -31,6 +40,7 @@ def load_settings():
                 settings["resolution"] = DEFAULT_SETTINGS["resolution"]
             return settings
     return DEFAULT_SETTINGS.copy()
+
 
 def save_settings(settings):
     with open(SETTINGS_FILE, "w") as f:
