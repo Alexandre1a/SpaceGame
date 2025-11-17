@@ -1,6 +1,7 @@
-import pygame
 import math
 import sys
+
+import pygame
 
 
 class ShipControls:
@@ -150,7 +151,7 @@ ship_sprite = create_ship_sprite()
 ship1 = Ship(
     name="Vaisseau",
     sprite=ship_sprite,
-    accel=200,  # Accélération forte
+    accel=2000,  # Accélération forte
     maxSpeed=145512,  # Vitesse max modérée
     drag=0,  # Faible traînée
     turnSpeed=180,  # Rotation rapide
@@ -159,8 +160,8 @@ ship1 = Ship(
 ship2 = Ship(
     name="Vaisseau",
     sprite=ship_sprite,
-    accel=200,  # Accélération forte
-    maxSpeed=300,  # Vitesse max modérée
+    accel=2000,  # Accélération forte
+    maxSpeed=145512,  # Vitesse max modérée
     drag=0,  # Faible traînée
     turnSpeed=180,  # Rotation rapide
 )

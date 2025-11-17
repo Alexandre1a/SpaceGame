@@ -3,8 +3,9 @@ Module de gestion des ressources du jeu.
 Charge et gère les polices, images, sons, etc.
 """
 
-import pygame
 import os
+
+import pygame
 
 from entities.ship import Ship
 
@@ -23,7 +24,8 @@ FONTS = {
 IMAGES = {
     "gladius": "gladius.png",
     "aurora": "aurora.jpg",
-    "400i": "400i.jpg",
+    "origin": "Origin.png",
+    "600i": "600i.png",
 }
 
 

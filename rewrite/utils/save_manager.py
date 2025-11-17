@@ -1,50 +1,41 @@
-import json, os
+import json
+import os
+
+import pygame
 
 SAVE_FILE = "savegame.json"
 
-def saveGame(ship):
+
+def saveGame(game):
     data = {
-        "ship": ship.name,
-        "pos": [ship.pos.x, ship.pos.y],
-        "vel": [ship.vel.x, ship.vel.y],
-        "angle": ship.angle,
+        "ship": game.selectedShip.name,
+        "pos": [game.selectedShip.pos.x, game.selectedShip.pos.y],
+        "vel": [game.selectedShip.vel.x, game.selectedShip.vel.y],
+        "angle": game.selectedShip.angle,
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f)
 
-def loadSave(game):
+
+def loadGame(game):
     if not os.path.exists(SAVE_FILE):
+        print("[SaveManager] Can't file savefile")
         return False
     with open(SAVE_FILE, "r") as f:
         data = json.load(f)
+        print("[SaveManager] Save file loaded successfully")
 
-    # retrouver le modèle du vaisseau par nom
-    template = None
-    for ship in game.available_ships:
-        if ship.name == data["ship"]:
-            template = ship
-            break
-
-    if not template:
-        return False
-
-    # recréer un vaisseau neuf basé sur le modèle
-    from entities.ship import Ship
-    ship = Ship(
-        template.name,
-        template.sprite,
-        template.acceleration,
-        template.max_speed,
-        template.drag,
-        template.turn_speed,
+    # Retrouver le modèle du vaisseau par nom
+    game.selectedShip = next(
+        (ship for ship in game.availableShips if ship.name == data["ship"]), None
     )
-
-    # appliquer l’état sauvegardé
-    ship.pos.xy = data["pos"]
-    ship.vel.xy = data["vel"]
-    ship.angle = data["angle"]
-
-    # charger dans la partie
-    game.selected_ship = ship
-    game.game_screen.load_ship(ship, reset=False)
+    if game.selectedShip is not None:
+        print("Loaded ship", game.selectedShip)
+        # Appliquer l'état sauvegardé
+        game.gameScreen.loadShip(
+            game.selectedShip,
+            pygame.Vector2(data["pos"]),
+            pygame.Vector2(data["vel"]),
+            data["angle"],
+        )
     return True

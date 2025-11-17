@@ -1,6 +1,7 @@
 import pygame
-from screens.base_screen import Screen
+
 from entities.planet import Planet
+from screens.base_screen import Screen
 
 
 class GameScreen(Screen):
@@ -15,10 +16,11 @@ class GameScreen(Screen):
             Planet((-800, 500), 300, (200, 150, 50)),
         ]
 
-    def loadShip(self, ship, reset=True):
+    def loadShip(self, ship, pos, vel, angle):
         self.ship = ship
-        if reset:  # Par défaut on remet à zéro
-            self.ship.pos = pygame.Vector2(0, 0)
+        self.ship.pos = pos
+        self.ship.vel = vel
+        self.ship.angle = angle
 
     def handleEvent(self, event):
         pass

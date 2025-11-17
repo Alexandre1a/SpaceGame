@@ -4,8 +4,16 @@ Permet de modifier la résolution, le framerate et le mode plein écran.
 """
 
 import pygame
+
 from screens.base_screen import Screen
 from ui.button import Button
+from utils.settings_manager import (
+    AVAILABLE_FPS,
+    AVAILABLE_RESOLUTIONS,
+    DEFAULT_SETTINGS,
+    resetSettings,
+    saveSettings,
+)
 
 
 class SettingsScreen(Screen):
@@ -14,22 +22,23 @@ class SettingsScreen(Screen):
     Permet de modifier les options graphiques et de performance.
     """
 
-    def __init__(self, game, width, height, font):
+    def __init__(self, game, width, height, font, titleFont, settings):
         """
         Initialise l'écran des paramètres.
 
         Args:
             game: Référence vers l'objet Game principal
         """
-        self.game = game
+        self._game = game
         self.width = width
         self.height = height
 
         # Récupération de la police
         self._font = font
+        self._titleFont = titleFont
 
         # Copie des paramètres actuels pour modification
-        self._settings = game.getSettings().copy()
+        self._settings = settings
 
         # Index actuels dans les listes de valeurs possibles
         self._fpsIndex = AVAILABLE_FPS.index(self._settings["fps"])
@@ -81,8 +90,6 @@ class SettingsScreen(Screen):
 
     def _resetSettings(self):
         """Réinitialise les paramètres aux valeurs par défaut"""
-        from utils.settings_manager import DEFAULT_SETTINGS
-
         self._settings = DEFAULT_SETTINGS.copy()
         self._fpsIndex = AVAILABLE_FPS.index(self._settings["fps"])
         self._resIndex = AVAILABLE_RESOLUTIONS.index(
@@ -94,24 +101,11 @@ class SettingsScreen(Screen):
         """Applique les paramètres et retourne au menu"""
         # Sauvegarder dans le fichier
         saveSettings(self._settings)
-
-        # Mettre à jour les paramètres dans l'objet Game
-        oldResolution = self._game.getSettings()["resolution"]
-        self._game._settings = self._settings.copy()
-
-        # Appliquer les changements de résolution si nécessaire
-        newResolution = self._settings["resolution"]
-        if oldResolution != newResolution or self._settings[
-            "fullscreen"
-        ] != self._game.getSettings().get("fullscreen"):
-            flags = pygame.FULLSCREEN if self._settings["fullscreen"] else 0
-            self._game._screen = pygame.display.set_mode(newResolution, flags)
-
-            # Reconstruire tous les écrans avec les nouvelles dimensions
-            self._game.rebuildScreens()
-
+        # Applique la résolution
+        self.screen = pygame.display.set_mode(self._game.settings["resolution"])
+        self._game.initScreens()
         # Retourner au menu
-        self._game.goToMenu()
+        self._game.displayMenu()
         print("[SettingsScreen] Paramètres appliqués")
 
     def handleEvent(self, event):
@@ -135,7 +129,7 @@ class SettingsScreen(Screen):
                 self._toggleFullscreen()
             elif event.key == pygame.K_ESCAPE:
                 # Retour sans sauvegarder
-                self._game.goToMenu()
+                self._game.displayMenu()
 
         # Gestion des boutons
         self._applyButton.handleEvent(event)
@@ -162,26 +156,28 @@ class SettingsScreen(Screen):
         surface.fill((20, 20, 40))
 
         # Titre
-        titleFont = self._game.getFonts().get("title", self._font)
-        titleText = titleFont.render("PARAMÈTRES", True, (200, 200, 255))
-        titleRect = titleText.get_rect(center=(surface.get_width() // 2, 80))
-        surface.blit(titleText, titleRect)
+
+        self._titleText = self._titleFont.render("PARAMÈTRES", True, (200, 200, 255))
+        self._titleRect = self._titleText.get_rect(
+            center=(surface.get_width() // 2, 80)
+        )
+        surface.blit(self._titleText, self._titleRect)
 
         # Position de départ pour les options
-        centerX = surface.get_width() // 2
-        startY = 200
+        self._centerX = surface.get_width() // 2
+        self._startY = 200
 
         # === OPTION FPS ===
-        fpsValue = (
-            "Illimité" if self._settings["fps"] == 0 else str(self._settings["fps"])
+        self._fpsValue = str(self._settings["fps"])
+        self._fpsText = self._font.render(
+            f"FPS: {self._fpsValue}", True, (255, 255, 255)
         )
-        fpsText = self._font.render(f"FPS: {fpsValue}", True, (255, 255, 255))
-        fpsRect = fpsText.get_rect(center=(centerX, startY))
-        surface.blit(fpsText, fpsRect)
+        self._fpsRect = self._fpsText.get_rect(center=(self._centerX, self._startY))
+        surface.blit(self._fpsText, self._fpsRect)
 
         # Flèches pour FPS
         arrowText = self._font.render("◄    ►", True, (150, 150, 150))
-        arrowRect = arrowText.get_rect(center=(centerX, startY + 30))
+        arrowRect = arrowText.get_rect(center=(self._centerX, self._startY + 30))
         surface.blit(arrowText, arrowRect)
 
         # === OPTION RÉSOLUTION ===
@@ -189,25 +185,25 @@ class SettingsScreen(Screen):
         resText = self._font.render(
             f"Résolution: {width}x{height}", True, (255, 255, 255)
         )
-        resRect = resText.get_rect(center=(centerX, startY + 80))
+        resRect = resText.get_rect(center=(self._centerX, self._startY + 80))
         surface.blit(resText, resRect)
 
         # Flèches pour résolution
         arrowText2 = self._font.render("▲    ▼", True, (150, 150, 150))
-        arrowRect2 = arrowText2.get_rect(center=(centerX, startY + 110))
+        arrowRect2 = arrowText2.get_rect(center=(self._centerX, self._startY + 110))
         surface.blit(arrowText2, arrowRect2)
 
         # === OPTION PLEIN ÉCRAN ===
         fsStatus = "ON" if self._settings["fullscreen"] else "OFF"
         fsText = self._font.render(f"Plein écran: {fsStatus}", True, (255, 255, 255))
-        fsRect = fsText.get_rect(center=(centerX, startY + 160))
+        fsRect = fsText.get_rect(center=(self._centerX, self._startY + 160))
         surface.blit(fsText, fsRect)
 
         # Touche pour basculer
         fsHintText = self._font.render(
             "(Appuyez sur F pour basculer)", True, (120, 120, 120)
         )
-        fsHintRect = fsHintText.get_rect(center=(centerX, startY + 190))
+        fsHintRect = fsHintText.get_rect(center=(self._centerX, self._startY + 190))
         surface.blit(fsHintText, fsHintRect)
 
         # Boutons
@@ -222,9 +218,9 @@ class SettingsScreen(Screen):
             "Échap pour annuler",
         ]
 
-        yOffset = surface.get_height() - 120
+        self._yOffset = surface.get_height() - 120
         for instruction in instructions:
             instText = self._font.render(instruction, True, (100, 100, 100))
-            instRect = instText.get_rect(center=(centerX, yOffset))
+            instRect = instText.get_rect(center=(self._centerX, self._yOffset))
             surface.blit(instText, instRect)
-            yOffset += 25
+            self._yOffset += 25

@@ -1,17 +1,24 @@
 import pygame
+
 from screens.base_screen import Screen
 from ui.button import Button
-from utils.settings_manager import load_settings, save_settings, AVAILABLE_FPS, AVAILABLE_RESOLUTIONS
+from utils.settings_manager import (
+    AVAILABLE_FPS,
+    AVAILABLE_RESOLUTIONS,
+    load_settings,
+    save_settings,
+)
+
 
 class SettingsScreen(Screen):
     def __init__(self, game):
         self.game = game
         wf, hf = game.screen.get_width(), game.screen.get_height()
-        font = self.game.fonts['default']
+        font = self.game.fonts["default"]
 
         # Charge les settings existants depuis self.game.settings
         # (au lieu de recharger depuis le fichier)
-        self.settings = self.game.settings.copy()
+        self.settings = self.game.getSettings().copy()
 
         # Index actuels pour parcourir les listes
         self.fps_index = AVAILABLE_FPS.index(self.settings["fps"])
@@ -19,7 +26,7 @@ class SettingsScreen(Screen):
 
         # Boutons - ils seront centrés selon la résolution actuelle
         self.buttons = [
-            Button("Apply & Exit", (wf//2, hf//2 + 150), self.exit_settings, font),
+            Button("Apply & Exit", (wf // 2, hf // 2 + 150), self.exit_settings, font),
         ]
 
     def cycle_fps(self, direction):
@@ -40,19 +47,17 @@ class SettingsScreen(Screen):
         """Sauvegarde et applique les changements"""
         # 1. Sauvegarder dans le fichier JSON
         save_settings(self.settings)
-        
+
         # 2. Mettre à jour les settings dans l'objet Game
         self.game.settings = self.settings.copy()
-        
+
         # 3. Appliquer les changements de résolution
         flags = pygame.FULLSCREEN if self.settings["fullscreen"] else 0
-        self.game.screen = pygame.display.set_mode(
-            self.settings["resolution"], flags
-        )
-        
+        self.game.screen = pygame.display.set_mode(self.settings["resolution"], flags)
+
         # 4. IMPORTANT : Recréer tous les écrans pour recalculer les positions
         self.game.rebuild_screens()
-        
+
         # 5. Retourner au menu (le nouveau menu avec les bonnes positions)
         self.game.current_screen = self.game.title_screen
 
@@ -74,28 +79,37 @@ class SettingsScreen(Screen):
 
     def render(self, surface):
         surface.fill((20, 20, 40))
-        font = self.game.fonts['default']
+        font = self.game.fonts["default"]
 
         # Titre - toujours centré grâce au calcul dynamique
         title = font.render("Settings", True, (200, 200, 255))
-        surface.blit(title, (surface.get_width()//2 - title.get_width()//2, 80))
+        surface.blit(title, (surface.get_width() // 2 - title.get_width() // 2, 80))
 
         # Affichage FPS
-        fps_text = "Unlimited" if self.settings["fps"] == 0 else str(self.settings["fps"])
+        fps_text = (
+            "Unlimited" if self.settings["fps"] == 0 else str(self.settings["fps"])
+        )
         fps_label = font.render(f"FPS: {fps_text} (← →)", True, (255, 255, 255))
-        surface.blit(fps_label, (surface.get_width()//2 - fps_label.get_width()//2, 200))
+        surface.blit(
+            fps_label, (surface.get_width() // 2 - fps_label.get_width() // 2, 200)
+        )
 
         # Affichage résolution
         w, h = self.settings["resolution"]
         res_label = font.render(f"Resolution: {w}x{h} (↑ ↓)", True, (255, 255, 255))
-        surface.blit(res_label, (surface.get_width()//2 - res_label.get_width()//2, 250))
+        surface.blit(
+            res_label, (surface.get_width() // 2 - res_label.get_width() // 2, 250)
+        )
 
         # Affichage fullscreen
         fs_label = font.render(
             f"Fullscreen: {'ON' if self.settings['fullscreen'] else 'OFF'} (press F)",
-            True, (255, 255, 255)
+            True,
+            (255, 255, 255),
         )
-        surface.blit(fs_label, (surface.get_width()//2 - fs_label.get_width()//2, 300))
+        surface.blit(
+            fs_label, (surface.get_width() // 2 - fs_label.get_width() // 2, 300)
+        )
 
         # Boutons
         for btn in self.buttons:

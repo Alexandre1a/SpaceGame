@@ -1,21 +1,22 @@
 # Importe les dépendances requises
-import pygame
 import sys
+
+import pygame
 
 # Importe les sous-modules personalisés
 from ressources.ressources import loadFonts, loadImages
-from entities.ship import Ship, ShipAI, KeyboardController, SimpleAIController
 
 # Screens
-from screens.title_screen import TitleScreen
-from screens.ship_selection import ShipSelectionScreen
+from entities.ship import KeyboardController, Ship, ShipAI, SimpleAIController
 from screens.game_screen import GameScreen
-from screens.settings_screen import SettingsScreen
 from screens.pause_menu import PauseMenu
+from screens.settings_screen import SettingsScreen
+from screens.ship_selection import ShipSelectionScreen
+from screens.title_screen import TitleScreen
 
-# Utilitaires
+# Utilitaire
+from utils.save_manager import loadGame, saveGame
 from utils.settings_manager import loadSettings, saveSettings
-from utils.save_manager import loadSave
 
 
 class Game:
@@ -49,6 +50,7 @@ class Game:
             Ship(
                 "TestShip",
                 "Admin",
+                "S",
                 self.images["gladius"],
                 accel=1250,
                 maxSpeed=5000,
@@ -56,9 +58,10 @@ class Game:
                 turnSpeed=300,
             ),
             Ship(
-                "400i",
+                "600i",
                 "Origin",
-                self.images["400i"],
+                "B",
+                self.images["600i"],
                 accel=1250,
                 maxSpeed=2000,
                 drag=0,
@@ -71,6 +74,31 @@ class Game:
         # Crée le controller (Après le chargement de menu)
         self.controller = KeyboardController()
 
+    # Fonction pour afficher les différents écrans
+    def displayStartOptions(self):
+        # Todo
+        # self.currentScreen = self.StartOptions
+        self.gameScreen.loadShip(
+            self.selectedShip,
+            pos=pygame.Vector2(0, 0),
+            vel=pygame.Vector2(0, 0),
+            angle=90,
+        )
+        self.currentScreen = self.gameScreen
+
+    def displayShipSelection(self):
+        self.currentScreen = self.shipSelect
+
+    def displaySettingsScreen(self):
+        self.currentScreen = self.settingsScreen
+
+    def displayMenu(self):
+        self.currentScreen = self.titleScreen
+
+    def saveGame(self):
+        saveGame(self)
+
+    def initScreens(self):
         # Screens
         self.titleScreen = TitleScreen(
             self,
@@ -92,14 +120,14 @@ class Game:
             self.fonts["default"],
             self.controller,
         )
-        """
         self.settingsScreen = SettingsScreen(
             self,
             self.screen.get_width(),
             self.screen.get_height(),
             self.fonts["default"],
+            self.fonts["title"],
+            self.settings,
         )
-        """
         self.pauseScreen = PauseMenu(
             self,
             self.screen.get_width(),
@@ -107,24 +135,9 @@ class Game:
             self.fonts["default"],
         )
 
-        self.gameScreen.loadShip(self.selectedShip)
-        self.currentScreen = self.titleScreen
-
-    # Fonction pour afficher les différents écrans
-    def displayStartOptions(self):
-        # Todo
-        # self.currentScreen = self.StartOptions
-        self.gameScreen.loadShip(self.selectedShip)
+    def loadGame(self):
+        loadGame(self)
         self.currentScreen = self.gameScreen
-
-    def displayShipSelection(self):
-        self.currentScreen = self.shipSelect
-
-    def displaySettingsScreen(self):
-        self.currentScreen = self.settingsScreen
-
-    def displayMenu(self):
-        self.currentScreen = self.titleScreen
 
     def quit(self):
         sys.exit()
@@ -150,12 +163,20 @@ class Game:
     def getSelectedShip(self):
         return self.selectedShip
 
+    def getSettings(self):
+        return self.settings
+
     # ==================== SETTER ====================
 
     def setSelectedShip(self, ship):
-        self.selectedShip = ship
+        if ship in self.availableShips:
+            self.selectedShip = ship
+        else:
+            return "Please set a correct ship"
 
     def run(self):
+        self.initScreens()
+        self.currentScreen = self.titleScreen
         while True:
             dt = self.clock.tick(self.settings["fps"]) / 1000.0
             for event in pygame.event.get():
@@ -177,3 +198,15 @@ class Game:
 
 if __name__ == "__main__":
     Game().run()
+
+
+def render_overlay(self, surface, font):
+    if not self.show_overlay:
+        return
+
+    overlay_rect = pygame.Rect(100, 100, 600, 400)
+    pygame.draw.rect(surface, (30, 30, 60), overlay_rect)
+    pygame.draw.rect(surface, (200, 200, 255), overlay_rect, 3)
+
+    title = font.render(self.name, True, (255, 255, 255))
+    surface.blit(title, (overlay_rect.x + 20, overlay_rect.y + 20))

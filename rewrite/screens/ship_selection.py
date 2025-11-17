@@ -4,6 +4,7 @@ Permet au joueur de choisir son vaisseau parmi ceux disponibles.
 """
 
 import pygame
+
 from screens.base_screen import Screen
 from ui.button import Button
 
@@ -155,7 +156,9 @@ class ShipSelectionScreen(Screen):
 
         # Nom du vaisseau
         nameText = self._font.render(
-            f"{ship.getBrand()} {ship.getName()}", True, (255, 255, 255)
+            f"{ship.getBrand()} {ship.getName()} Class {ship.getRank()}",
+            True,
+            (255, 255, 255),
         )
         surface.blit(nameText, (previewX, previewY))
 

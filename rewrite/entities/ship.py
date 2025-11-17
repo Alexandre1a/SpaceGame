@@ -1,5 +1,6 @@
-import pygame
 import math
+
+import pygame
 
 
 class ShipControls:
@@ -76,12 +77,13 @@ class SimpleAIController:
 
 
 class Ship:
-    def __init__(self, name, brand, sprite, accel, maxSpeed, drag, turnSpeed):
+    def __init__(self, name, brand, rank, sprite, accel, maxSpeed, drag, turnSpeed):
         """
         Cette classe permet de représenter le vaisseau spacial.
         """
         self.name = name
         self.brand = brand
+        self.rank = rank
         self.sprite = sprite
         self.acceleration = accel
         self.maxSpeed = maxSpeed
@@ -97,7 +99,10 @@ class Ship:
         return self.name
 
     def getBrand(self):
-        return self.name
+        return self.brand
+
+    def getRank(self):
+        return self.rank
 
     def getAcceleration(self):
         return self.acceleration
