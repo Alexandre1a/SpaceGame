@@ -76,6 +76,18 @@ class SimpleAIController:
         return controls
 
 
+class FollowerAIController(SimpleAIController):
+    """IA qui suit une cible dynamique (le joueur) — on passe la target_pos chaque frame."""
+
+    def __init__(self, get_target_callable):
+        # get_target_callable: function returning Vector2
+        self.get_target = get_target_callable
+
+    def getControls(self, ship):
+        self.target_pos = self.get_target()
+        return super().getControls(ship)
+
+
 class Ship:
     def __init__(self, name, brand, rank, sprite, accel, maxSpeed, drag, turnSpeed):
         """
@@ -171,72 +183,3 @@ class Ship:
         img = pygame.transform.rotozoom(self.sprite, -self.angle + 90, zoom)
         rect = img.get_rect(center=screen_pos)
         surface.blit(img, rect)
-
-
-# Classe Ship Simplifiée pour les IA
-
-
-class ShipAI:
-    def __init__(self, sprite):
-        self.name = "Ai"
-        self.sprite = sprite
-        self.acceleration = 200
-        self.maxSpeed = 2000
-        self.drag = 0
-        self.turnSpeed = 120
-
-        # État initial
-        self.pos = pygame.Vector2(400, 300)  # Centre de l'écran
-        self.vel = pygame.Vector2(0, 0)
-        self.angle = 90.0  # Pointé vers le haut
-
-    def update(self, dt, controls):
-        # Rotation
-        if controls.turn_left:
-            self.angle -= self.turnSpeed * dt
-        if controls.turn_right:
-            self.angle += self.turnSpeed * dt
-        self.angle %= 360
-
-        # Direction avant (conversion angle -> vecteur)
-        rad = math.radians(self.angle - 90)
-        forward = pygame.Vector2(math.cos(rad), math.sin(rad))
-
-        # Propulsion
-        if controls.thrust:
-            self.vel += forward * self.acceleration * dt
-
-        # Freinage
-        if controls.brake:
-            speed_sq = self.vel.length_squared()
-            if speed_sq > 0:
-                old_vel = self.vel.copy()
-                brake_dir = -self.vel.normalize()
-                self.vel += brake_dir * self.acceleration * dt
-                # Éviter de reculer
-                if self.vel.dot(old_vel) < 0:
-                    self.vel = pygame.Vector2(0, 0)
-
-        # Résistance (traînée)
-        speed_sq = self.vel.length_squared()
-        if self.drag > 0 and speed_sq > 0:
-            drag_force = -self.vel.normalize() * (self.drag * speed_sq)
-            self.vel += drag_force * dt
-
-        # Limiteur de vitesse
-        if self.vel.length() > self.maxSpeed:
-            self.vel.scale_to_length(self.maxSpeed)
-
-        # Mise à jour position
-        self.pos += self.vel * dt
-
-        # Garder le vaisseau à l'écran
-        self.pos.x = self.pos.x % 800
-        self.pos.y = self.pos.y % 600
-
-    def render(self, surface):
-        # Rotation du sprite
-        rotated_sprite = pygame.transform.rotate(self.sprite, -self.angle)
-        # Position centrée
-        rect = rotated_sprite.get_rect(center=self.pos)
-        surface.blit(rotated_sprite, rect)

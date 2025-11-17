@@ -7,7 +7,7 @@ import pygame
 from ressources.ressources import loadFonts, loadImages
 
 # Screens
-from entities.ship import KeyboardController, Ship, ShipAI, SimpleAIController
+from entities.ship import KeyboardController, Ship  # , ShipAI, SimpleAIController
 from screens.game_screen import GameScreen
 from screens.pause_menu import PauseMenu
 from screens.settings_screen import SettingsScreen
@@ -84,6 +84,7 @@ class Game:
             vel=pygame.Vector2(0, 0),
             angle=90,
         )
+        # self.gameScreen.generatePlanets()
         self.currentScreen = self.gameScreen
 
     def displayShipSelection(self):
