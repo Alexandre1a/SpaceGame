@@ -19,8 +19,6 @@ SYSTEM_MIN_PLANET_DIST = (
     800  # distance minimale entre deux planètes d'un même système (optimisé)
 )
 GALAXY_BIOMES = ["terran", "lava", "ice", "gasgiant"]  # exemple de biomes
-
-
 class GameScreen(Screen):
     def __init__(self, game, width, height, font, playerController):
         super().__init__()
@@ -95,25 +93,14 @@ class GameScreen(Screen):
         sx, sy = center
         planets = []
         n = r.randint(PLANETS_PER_SYSTEM[0], PLANETS_PER_SYSTEM[1])
-        # choose an inner radius and step
-        inner = 400  # starting orbital radius
-        step = max(SYSTEM_MIN_PLANET_DIST, inner // 2)
-        # shuffle angular offsets to avoid perfect rings
         for i in range(n):
             # orbital radius grows with index and small jitter
-            orbit = inner + i * step + r.randint(-int(step * 0.3), int(step * 0.3))
+
+            
             angle = r.random() * math.tau
-            px = sx + math.cos(angle) * orbit
-            py = sy + math.sin(angle) * orbit
-            # planet radius depends on biome
-            if biome == "lava":
-                pr = r.randint(300, 2000)
-            elif biome == "ice":
-                pr = r.randint(100, 1200)
-            elif biome == "gasgiant":
-                pr = r.randint(1500, 3500)
-            else:  # terran
-                pr = r.randint(100, 1500)
+            px = sx + math.cos(angle)
+            py = sy + math.sin(angle)
+            pr = r.randint(100, 1500)
             color = (
                 r.randint(60, 255),
                 r.randint(60, 255),
@@ -168,41 +155,18 @@ class GameScreen(Screen):
         print("[Game] Generated planets", [p.name for p in self.planetList])
         return self.planetList
 
-    # ===================== UPDATE / ZOOM / INPUT =====================
     def handleEvent(self, event):
-        # click to toggle overlay on planets
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            mouse = pygame.Vector2(event.pos)
-            # convert to world coords
-            half = pygame.Vector2(self.game.screen.get_size()) / 2
-            cam = self.ship.pos - half / self.zoom
-            world_mouse = mouse / self.zoom + cam
-            for p in self.get_planets_near_player():
-                if (world_mouse - p.pos).length_squared() < (p.radius * p.radius):
-                    p.showOverlay = not p.showOverlay
-                    break
-
-        # zoom via wheel
-        if event.type == pygame.MOUSEWHEEL:
-            # mousewheel y positive -> zoom in
-            self.target_zoom = max(
-                0.05, min(5.0, self.target_zoom * (1.0 + 0.1 * event.y))
-            )
+        pass
 
     def update(self, dt):
         # smooth zoom interpolation (exponential-like)
         # lerp target zoom with speed scaled by dt
         keys = pygame.key.get_pressed()
         if keys[pygame.K_EQUALS] or keys[pygame.K_KP_PLUS]:
-            self.target_zoom *= ZOOM_FACTOR
+            self.zoom = min(5.0, self.zoom + 1,2*dt)
         if keys[pygame.K_MINUS] or keys[pygame.K_KP_MINUS]:
-            self.target_zoom /= ZOOM_FACTOR
+            self.zoom = max(0.001, self.zoom - 1,2*dt)
 
-        # Clamp
-        self.target_zoom = max(0.1, min(5.0, self.target_zoom))
-
-        # Interpolation fluide
-        self.zoom += (self.target_zoom - self.zoom) * min(1, self.zoom_speed * dt)
 
         # update ship physics
         controls = (
