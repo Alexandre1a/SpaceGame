@@ -88,6 +88,52 @@ class FollowerAIController(SimpleAIController):
         return super().getControls(ship)
 
 
+class AdvancedAIController:
+    """
+    IA qui suit un vaisseau cible, avec accélération progressive,
+    rotation fluide et anticipation de la position du joueur.
+    """
+
+    def __init__(self, target_ship, lookahead_time=0.5):
+        self.target_ship = target_ship
+        self.lookahead_time = lookahead_time  # anticipation
+
+    def getControls(self, ship, dt):
+        controls = ShipControls()
+
+        # Calculer la position anticipée
+        target_future_pos = (
+            self.target_ship.pos + self.target_ship.vel * self.lookahead_time
+        )
+
+        to_target = target_future_pos - ship.pos
+        distance = to_target.length()
+
+        if distance < 50:
+            controls.brake = True
+            return controls
+
+        # Angle vers la cible
+        target_angle = math.degrees(math.atan2(to_target.y, to_target.x)) + 90
+        target_angle %= 360
+
+        # Différence d'angle
+        angle_diff = (target_angle - ship.angle + 180) % 360 - 180
+
+        # Rotation douce
+        turn_threshold = 5
+        if angle_diff < -turn_threshold:
+            controls.turn_left = True
+        elif angle_diff > turn_threshold:
+            controls.turn_right = True
+
+        # Accélération progressive
+        if abs(angle_diff) < 30:
+            controls.thrust = True
+
+        return controls
+
+
 class Ship:
     def __init__(self, name, brand, rank, sprite, accel, maxSpeed, drag, turnSpeed):
         """

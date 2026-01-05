@@ -7,6 +7,7 @@ from random import randint
 import pygame
 
 from entities.planet import Planet
+from entities.ship import AdvancedAIController, Ship
 from screens.base_screen import Screen
 
 # CONFIG
@@ -23,11 +24,28 @@ class GameScreen(Screen):
     def __init__(self, game, width, height, font, playerController):
         super().__init__()
         self.game = game
-        self.ship = None
+        self.ship = game.selectedShip
         self.zoom = 1.0
         self.target_zoom = 1.0
         self.zoom_speed = 1.0  # plus grand -> zoom plus rapide
         self.playerController = playerController
+        enemy_ship = Ship(
+            "Enemy1",
+            "Alien",
+            "S",
+            sprite=self.game.images["600i"],
+            accel=1000,
+            maxSpeed=3000,
+            drag=0,
+            turnSpeed=180,
+        )
+        enemy_ship.pos = pygame.Vector2(500, 500)
+
+        # Créer l’IA qui suit le joueur
+        enemy_ai = AdvancedAIController(self.ship)
+
+        # Stocker dans une liste d’ennemis
+        self.enemies = [(enemy_ship, enemy_ai)]
 
         # world / procedural
         self.chunk_cache = OrderedDict()  # key (cx,cy) -> list[Planet]
@@ -175,6 +193,9 @@ class GameScreen(Screen):
             else self.playerController.getControls(self.ship)
         )
         self.ship.update(dt, controls)
+        for enemy, ai in self.enemies:
+            controls = ai.getControls(enemy, dt)
+            enemy.update(dt, controls)
 
         # lazy load chunks around ship
         pk = self.chunk_key_from_pos(self.ship.pos)
@@ -195,6 +216,8 @@ class GameScreen(Screen):
             planet.render(surface, cam, self.zoom)
 
         # draw ship
+        for enemy, _ in self.enemies:
+            enemy.render(surface, cam, self.zoom)
         self.ship.render(surface, cam, self.zoom)
 
         # debug info

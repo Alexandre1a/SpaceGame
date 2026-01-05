@@ -74,7 +74,7 @@ class Planet:
         self.r = self.radius + margin
         return (self.p - self.pos).length_squared() < (self.r * self.r)
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "pos": [self.pos.x, self.pos.y],
             "radius": self.radius,
@@ -84,7 +84,7 @@ class Planet:
         }
 
     @classmethod
-    def fromDict(cls, data):
+    def from_dict(cls, data):
         # assure que pos est Vector2 et color est tuple
         pos = pygame.Vector2(data["pos"])
         radius = data["radius"]
@@ -94,11 +94,11 @@ class Planet:
         p.showOverlay = data.get("showOverlay", False)
         return p
 
-    def toSaveData(self):
+    def to_save_data(self):
         return [(self.pos.x, self.pos.y), self.radius, self.color, self.name]
 
     @staticmethod
-    def fromSaveData(data):
+    def from_save_data(data):
         return Planet(data[0], data[1], data[2], data[3])
 
     def renderOverlay(self, surface, font):

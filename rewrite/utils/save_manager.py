@@ -8,11 +8,11 @@ SAVE_FILE = "savegame.json.gz"
 
 
 # utilitaires pour planets
-def serializePlanet(p):
+def serialize_planet(p):
     return p.to_dict()
 
 
-def deserializePlanet(d):
+def deserialize_planet(d):
     return __import__("entities.planet", fromlist=["Planet"]).Planet.from_dict(d)
 
 
@@ -24,7 +24,7 @@ def saveGame(game):
         "angle": game.selectedShip.angle,
         # galaxy state
         "galaxy_seed": getattr(game, "galaxy_seed", None),
-        "chunks": game.gameScreen.serializeLoadedChunks(),  # dict chunk_key -> [planets...]
+        "chunks": game.gameScreen.serialize_loaded_chunks(),  # dict chunk_key -> [planets...]
         "player_zoom": game.gameScreen.zoom,
     }
     with gzip.open(SAVE_FILE, "wb") as f:
@@ -58,7 +58,7 @@ def loadGame(game):
 
     # Restore chunks/planets
     chunks = data.get("chunks", {})
-    game.gameScreen.deserializeLoadedChunks(chunks)
+    game.gameScreen.deserialize_loaded_chunks(chunks)
 
     # restore zoom
     game.gameScreen.zoom = data.get("player_zoom", game.gameScreen.zoom)
