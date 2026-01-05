@@ -5,6 +5,7 @@ import pygame
 
 # Importe les sous-modules personalisés
 from ressources.ressources import loadFonts, loadImages
+from screens.start_screen import StartOptions
 
 # Screens
 from entities.ship import KeyboardController, Ship  # , ShipAI, SimpleAIController
@@ -77,15 +78,7 @@ class Game:
     # Fonction pour afficher les différents écrans
     def displayStartOptions(self):
         # Todo
-        # self.currentScreen = self.StartOptions
-        self.gameScreen.loadShip(
-            self.selectedShip,
-            pos=pygame.Vector2(0, 0),
-            vel=pygame.Vector2(0, 0),
-            angle=90,
-        )
-        # self.gameScreen.generatePlanets()
-        self.currentScreen = self.gameScreen
+        self.currentScreen = self.startOptions
 
     def displayShipSelection(self):
         self.currentScreen = self.shipSelect
@@ -130,6 +123,12 @@ class Game:
             self.settings,
         )
         self.pauseScreen = PauseMenu(
+            self,
+            self.screen.get_width(),
+            self.screen.get_height(),
+            self.fonts["default"],
+        )
+        self.startOptions = StartOptions(
             self,
             self.screen.get_width(),
             self.screen.get_height(),

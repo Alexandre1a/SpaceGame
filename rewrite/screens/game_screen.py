@@ -20,6 +20,8 @@ SYSTEM_MIN_PLANET_DIST = (
     800  # distance minimale entre deux planètes d'un même système (optimisé)
 )
 GALAXY_BIOMES = ["terran", "lava", "ice", "gasgiant"]  # exemple de biomes
+
+
 class GameScreen(Screen):
     def __init__(self, game, width, height, font, playerController):
         super().__init__()
@@ -46,6 +48,8 @@ class GameScreen(Screen):
 
         # Stocker dans une liste d’ennemis
         self.enemies = [(enemy_ship, enemy_ai)]
+
+        self.planets = []
 
         # world / procedural
         self.chunk_cache = OrderedDict()  # key (cx,cy) -> list[Planet]
@@ -114,7 +118,6 @@ class GameScreen(Screen):
         for i in range(n):
             # orbital radius grows with index and small jitter
 
-            
             angle = r.random() * math.tau
             px = sx + math.cos(angle)
             py = sy + math.sin(angle)
@@ -181,10 +184,9 @@ class GameScreen(Screen):
         # lerp target zoom with speed scaled by dt
         keys = pygame.key.get_pressed()
         if keys[pygame.K_EQUALS] or keys[pygame.K_KP_PLUS]:
-            self.zoom = min(5.0, self.zoom + 1,2*dt)
+            self.zoom = min(5.0, self.zoom + 1, 2 * dt)
         if keys[pygame.K_MINUS] or keys[pygame.K_KP_MINUS]:
-            self.zoom = max(0.001, self.zoom - 1,2*dt)
-
+            self.zoom = max(0.001, self.zoom - 1, 2 * dt)
 
         # update ship physics
         controls = (

@@ -22,10 +22,8 @@ def saveGame(game):
         "pos": [game.selectedShip.pos.x, game.selectedShip.pos.y],
         "vel": [game.selectedShip.vel.x, game.selectedShip.vel.y],
         "angle": game.selectedShip.angle,
-        # galaxy state
-        "galaxy_seed": getattr(game, "galaxy_seed", None),
-        "chunks": game.gameScreen.serialize_loaded_chunks(),  # dict chunk_key -> [planets...]
-        "player_zoom": game.gameScreen.zoom,
+        # Plannets
+        "planets": [serialize_planet(p) for p in game.gameScreen.planets],
     }
     with gzip.open(SAVE_FILE, "wb") as f:
         f.write(json.dumps(data).encode("utf-8"))

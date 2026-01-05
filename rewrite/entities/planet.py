@@ -80,7 +80,6 @@ class Planet:
             "radius": self.radius,
             "color": list(self.color),
             "name": self.name,
-            "showOverlay": bool(self.showOverlay),
         }
 
     @classmethod
