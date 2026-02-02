@@ -184,9 +184,9 @@ class GameScreen(Screen):
         # lerp target zoom with speed scaled by dt
         keys = pygame.key.get_pressed()
         if keys[pygame.K_EQUALS] or keys[pygame.K_KP_PLUS]:
-            self.zoom = min(5.0, self.zoom + 1, 2 * dt)
+            self.zoom = min(2, self.zoom + 1.5 * dt)
         if keys[pygame.K_MINUS] or keys[pygame.K_KP_MINUS]:
-            self.zoom = max(0.001, self.zoom - 1, 2 * dt)
+            self.zoom = max(0.5, self.zoom - 0.5 * dt)
 
         # update ship physics
         controls = (
