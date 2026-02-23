@@ -43,7 +43,7 @@ class StartOptions(Screen):
             vel=pygame.Vector2(0, 0),
             angle=90,
         )
-        # self.gameScreen.generatePlanets()
+        self.game.gameScreen.generatePlanets()
         self.game.currentScreen = self.game.gameScreen
 
     def loadGame(self):

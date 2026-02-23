@@ -18,10 +18,11 @@ def deserialize_planet(d):
 
 def saveGame(game):
     data = {
-        "ship": game.selectedShip.name,
+        "ship": game.selectedShip,
         "pos": [game.selectedShip.pos.x, game.selectedShip.pos.y],
         "vel": [game.selectedShip.vel.x, game.selectedShip.vel.y],
         "angle": game.selectedShip.angle,
+        "zoom" : game.gameScreen.zoom,
         # Plannets
         "planets": [serialize_planet(p) for p in game.gameScreen.planets],
     }
@@ -37,28 +38,7 @@ def loadGame(game):
     with gzip.open(SAVE_FILE, "rb") as f:
         data = json.loads(f.read().decode("utf-8"))
     print("[SaveManager] Save file loaded successfully")
-
-    # restore galaxy seed if present
-    if data.get("galaxy_seed") is not None:
-        game.galaxy_seed = data["galaxy_seed"]
-
     # Ship
     game.selectedShip = next(
         (ship for ship in game.availableShips if ship.name == data["ship"]), None
     )
-    if game.selectedShip:
-        game.gameScreen.loadShip(
-            game.selectedShip,
-            pygame.Vector2(data["pos"]),
-            pygame.Vector2(data["vel"]),
-            data["angle"],
-        )
-
-    # Restore chunks/planets
-    chunks = data.get("chunks", {})
-    game.gameScreen.deserialize_loaded_chunks(chunks)
-
-    # restore zoom
-    game.gameScreen.zoom = data.get("player_zoom", game.gameScreen.zoom)
-
-    return True

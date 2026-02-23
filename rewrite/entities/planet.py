@@ -69,10 +69,10 @@ class Planet:
                 self.screenRadius,
             )
 
-    def collidesPoint(self, point, margin=0) -> bool:
-        self.p = pygame.Vector2(point)
-        self.r = self.radius + margin
-        return (self.p - self.pos).length_squared() < (self.r * self.r)
+    def collidePoints(self, point, margin=0) -> bool:
+        p = pygame.Vector2(point)
+        r = self.radius + margin
+        return (p - self.pos).length_squared() < (r * r)
 
     def to_dict(self):
         return {
@@ -82,7 +82,6 @@ class Planet:
             "name": self.name,
         }
 
-    @classmethod
     def from_dict(cls, data):
         # assure que pos est Vector2 et color est tuple
         pos = pygame.Vector2(data["pos"])
@@ -96,7 +95,6 @@ class Planet:
     def to_save_data(self):
         return [(self.pos.x, self.pos.y), self.radius, self.color, self.name]
 
-    @staticmethod
     def from_save_data(data):
         return Planet(data[0], data[1], data[2], data[3])
 
