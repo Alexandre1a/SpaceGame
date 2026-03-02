@@ -16,7 +16,7 @@ from screens.ship_selection import ShipSelectionScreen
 from screens.title_screen import TitleScreen
 
 # Utilitaire
-from utils.save_manager import loadGame, saveGame
+from utils.save_manager import loadSave, saveGame
 from utils.settings_manager import loadSettings, saveSettings
 
 
@@ -30,9 +30,8 @@ class Game:
         pygame.init()
         self.clock = pygame.time.Clock()
 
-        # Charge les paramètres et la sauvegarde
+        # Charge les paramètres
         self.settings = loadSettings()
-        # self.save = loadSave()
         # self.money = self.save["money"]
         self.money = 100
 
@@ -74,6 +73,18 @@ class Game:
 
         # Crée le controller (Après le chargement de menu)
         self.controller = KeyboardController()
+        # Charge la save
+        self.save = loadSave(self)
+
+    
+    @property
+    def currentScreen(self):
+        return self._currentScreen
+    
+    @currentScreen.setter
+    def currentScreen(self, screen):
+        self._currentScreen = screen
+        screen.onEnter()
 
     # Fonction pour afficher les différents écrans
     def displayStartOptions(self):
@@ -135,9 +146,9 @@ class Game:
             self.fonts["default"],
         )
 
-    def loadGame(self):
-        loadGame(self)
-        self.currentScreen = self.gameScreen
+    def getSaveData(self):
+        self.save = loadSave(self)
+        return self.save
 
     def quit(self):
         sys.exit()

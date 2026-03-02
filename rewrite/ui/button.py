@@ -22,6 +22,7 @@ class Button:
         idleColor=(200, 200, 200),
         hoverColor=(255, 255, 255),
         textColor=(0, 0, 0),
+        disabledColor=(80, 80, 80),
     ):
         """
         Initialise un bouton.
@@ -43,6 +44,8 @@ class Button:
         self._idleColor = idleColor
         self._hoverColor = hoverColor
         self._textColor = textColor
+        self._disabled = False
+        self._disabledColor = disabledColor
 
         # Rendu du texte
         self._textSurface = self._font.render(self._text, True, self._textColor)
@@ -66,6 +69,9 @@ class Button:
     def getPosition(self):
         """Retourne la position du centre du bouton"""
         return self._rect.center
+
+    def getDisabled(self):
+        return self._disabled
 
     # ==================== SETTERS ====================
 
@@ -103,6 +109,9 @@ class Button:
             callback: Nouvelle fonction à appeler au clic
         """
         self._callback = callback
+    
+    def setDisabled(self, state: bool):
+        self._disabled = state
 
     # ==================== GESTION DES ÉVÉNEMENTS ====================
 
@@ -113,6 +122,10 @@ class Button:
         Args:
             event: Événement pygame à traiter
         """
+        # If button is disabled, ignore everything
+        if self._disabled:
+            return
+
         # Détection du clic gauche sur le bouton
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self._rect.collidepoint(event.pos):
@@ -136,10 +149,15 @@ class Button:
         Args:
             surface: Surface pygame sur laquelle dessiner
         """
-        # Déterminer la couleur en fonction du survol
         mousePos = pygame.mouse.get_pos()
+
         isHovered = self._rect.collidepoint(mousePos)
-        color = self._hoverColor if isHovered else self._idleColor
+
+        if self._disabled:
+            # When disabled, no hover
+            color = self._disabledColor
+        else:
+            color = self._hoverColor if isHovered else self._idleColor
 
         # Dessiner le rectangle du bouton
         pygame.draw.rect(surface, color, self._rect)

@@ -82,6 +82,7 @@ class Planet:
             "name": self.name,
         }
 
+    @classmethod
     def from_dict(cls, data):
         # assure que pos est Vector2 et color est tuple
         pos = pygame.Vector2(data["pos"])
@@ -95,22 +96,22 @@ class Planet:
     def to_save_data(self):
         return [(self.pos.x, self.pos.y), self.radius, self.color, self.name]
 
+    @staticmethod
     def from_save_data(data):
         return Planet(data[0], data[1], data[2], data[3])
 
-    def renderOverlay(self, surface, font):
+    def renderOverlay(self, surface, font, rect):
         if not self.showOverlay:
             return
-        self.overlayRect = pygame.Rect(100, 100, 600, 400)
-        pygame.draw.rect(surface, (30, 30, 60), self.overlayRect)
-        pygame.draw.rect(surface, (200, 200, 255), self.overlayRect, 3)
+        pygame.draw.rect(surface, (30, 30, 60), rect)
+        pygame.draw.rect(surface, (200, 200, 255), rect, 3)
 
         self.title = font.render(self.name, True, (255, 255, 255))
-        surface.blit(self.title, (self.overlayRect.x + 20, self.overlayRect.y + 20))
+        surface.blit(self.title, (rect.x + 20, rect.y + 20))
 
         self.tips = font.render(" Press C to close ", True, (100, 100, 100))
-        surface.blit(self.tips, (self.overlayRect.x + 400, self.overlayRect.y + 20))
+        surface.blit(self.tips, (rect.x + 400, rect.y + 20))
         self.content = font.render(
             "Quêtes, Ressources, Boutique", True, (200, 200, 200)
         )
-        surface.blit(self.content, (self.overlayRect.x + 20, self.overlayRect.y + 60))
+        surface.blit(self.content, (rect.x + 20, rect.y + 60))

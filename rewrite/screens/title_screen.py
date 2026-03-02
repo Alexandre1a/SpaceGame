@@ -58,6 +58,9 @@ class TitleScreen(Screen):
             ),
         ]
 
+    def onEnter(self):
+        pass
+
     def handleEvent(self, event):
         """
         Gère les événements de l'écran titre.

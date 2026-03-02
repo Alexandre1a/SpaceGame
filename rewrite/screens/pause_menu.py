@@ -42,7 +42,7 @@ class PauseMenu(Screen):
         ]
 
     def resume(self):
-        self.game.current_screen = self.game.gameScreen
+        self.game.currentScreen = self.game.gameScreen
 
     def saveAndQuit(self):
         self.game.saveGame()

@@ -17,6 +17,7 @@ class StartOptions(Screen):
         self.width = width
         self.height = height
         self.font = self.game.fonts["default"]
+        self.data = game.getSaveData()
 
         self.buttons = [
             Button(
@@ -36,6 +37,15 @@ class StartOptions(Screen):
             ),
         ]
 
+    def onEnter(self):
+        self.data = self.game.getSaveData()
+        if self.data != None:
+            saveExists = True
+        else:
+            saveExists = False
+
+        self.buttons[1].setDisabled(not saveExists)
+
     def newGame(self):
         self.game.gameScreen.loadShip(
             self.game.selectedShip,
@@ -43,17 +53,20 @@ class StartOptions(Screen):
             vel=pygame.Vector2(0, 0),
             angle=90,
         )
+        self.game.gameScreen.generateSystems()
         self.game.gameScreen.generatePlanets()
         self.game.currentScreen = self.game.gameScreen
 
     def loadGame(self):
-        self.data = self.game.loadGame()
+        self.data = self.game.getSaveData()
         self.game.gameScreen.loadShip(
             self.data["ship"],
-            self.data["position"],
-            self.data["velocity"],
+            self.data["pos"],
+            self.data["vel"],
             self.data["angle"],
         )
+
+        self.game.gameScreen.loadPlanets(self.data["planets"])
         self.game.currentScreen = self.game.gameScreen
 
     def handleEvent(self, event):
