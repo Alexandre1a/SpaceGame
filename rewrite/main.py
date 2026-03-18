@@ -5,6 +5,7 @@ import pygame
 
 # Importe les sous-modules personalisés
 from ressources.ressources import loadFonts, loadImages
+from gameplay.quest_manager import QuestManager
 from screens.start_screen import StartOptions
 
 # Screens
@@ -18,6 +19,7 @@ from screens.title_screen import TitleScreen
 # Utilitaire
 from utils.save_manager import loadSave, saveGame
 from utils.settings_manager import loadSettings, saveSettings
+from utils.phtonos import Phtonos
 
 
 class Game:
@@ -32,8 +34,6 @@ class Game:
 
         # Charge les paramètres
         self.settings = loadSettings()
-        # self.money = self.save["money"]
-        self.money = 100
 
         # Initialise et crée les paramètres de l'écran
         self.screen = pygame.display.set_mode(self.settings["resolution"])
@@ -75,12 +75,19 @@ class Game:
         self.controller = KeyboardController()
         # Charge la save
         self.save = loadSave(self)
+        # Load the saved money
+        self.amount = 0
+        if self.save != None:
+          self.amount = self.save["money"]
+        else:
+          self.initPhtonos()
+          self.phtonos.add(self, 100)
 
-    
+
     @property
     def currentScreen(self):
         return self._currentScreen
-    
+
     @currentScreen.setter
     def currentScreen(self, screen):
         self._currentScreen = screen
@@ -146,6 +153,12 @@ class Game:
             self.fonts["default"],
         )
 
+    def initPhtonos(self):
+      self.phtonos = Phtonos()
+
+    def initQuestManager(self):
+      self.questManager = QuestManager(self)
+
     def getSaveData(self):
         self.save = loadSave(self)
         return self.save
@@ -169,7 +182,7 @@ class Game:
         return self.availableShips
 
     def getMoney(self):
-        return self.money
+        return self.amount
 
     def getSelectedShip(self):
         return self.selectedShip

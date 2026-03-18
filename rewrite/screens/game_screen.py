@@ -1,3 +1,4 @@
+from cmath import rect
 import json
 import math
 import random
@@ -6,9 +7,11 @@ from random import randbytes, randint
 
 import pygame
 
-from entities.planet import Planet
+from entities.planet import Planet, PLANET_TYPE
 from entities.ship import AdvancedAIController, Ship
+from gameplay.quest_manager import QuestManager
 from screens.base_screen import Screen
+from ui.button import Button
 
 class System: # Move elsewhere
     def __init__(self, center) -> None:
@@ -44,7 +47,6 @@ class GameScreen(Screen):
         self.enemies = [(enemy_ship, enemy_ai)]
 
         self.planets = []
-        self.systems = []
 
         self.overlayRect = pygame.Rect(
             int(width * 0.05), # 5% From left
@@ -53,23 +55,10 @@ class GameScreen(Screen):
             int(height * 0.5), # 50 height
         )
         # Procedural generation paramameters
-        # Planets options
-        self.genAttempts = 1500
-        self.planetNb = 7
-        self.minRadius = 20
-        self.maxRadius = 60
-        self.minSpacing = 1500
-        self.size = (-7500, 7500)
-        self.usedNames = set()
-        self.colorRange = (0, 256)
-        # Systems options
-        self.systemNb = 40
-        self.systemSize = 150
-        self.systemGap = 25000
-        self.systemMaxPlanet = 7
-        self.systemMinPlanet = 3
-
-
+        self.buttons = [
+          Button("Accept Quest", (self.overlayRect.x + 100, self.overlayRect.y + 120) , None, self.font),
+          Button("Complete Quest", (self.overlayRect.x + 400, self.overlayRect.y + 120) , None, self.font)
+        ]
 
     # ===================== SHIP LOAD =====================
     def loadShip(self, ship, pos, vel, angle):
@@ -80,62 +69,46 @@ class GameScreen(Screen):
 
     def loadPlanets(self, planets):
         self.planets = planets
+        print("[Game] Loaded plannets", [p.name for p in self.planets])
 
-    def generateSystems(self):
-        print("[GameScreen] Generating systems...")
-        systemList = []
-        for i in range(self.systemNb):
-            placed = False
-            for j in range(self.systemSize):
-                cx = randint(self.size[0], self.size[1])
-                cy = randint(self.size[0], self.size[1])
-                center = pygame.Vector2(cx, cy)
 
-                ok = True
-                for s in systemList:
-                    if (center - s.center).length_squared() < self.systemGap**2:
-                        ok = False
-                        break
 
-                if ok:
-                    systemList.append(System(center))
-                    placed = True
-                    break
-
-        self.systems = systemList
-        print("[GameScreen] Generated systems !")
-
-    def generatePlanets(self):
+    def generatePlanets(self, count=12, spread=8000, minDistance=300):
+        ''''
+        Genère un nombre "count" de plannètes
+        '''
         print("[GameScreen] Generating planets...")
-        for system in self.systems:
-            planetList = []
-            planetNb = randint(self.systemMinPlanet, self.systemMaxPlanet)
-            for i in range(planetNb):
-                for j in range(self.genAttempts):
-                    dist = randint(4000, 16000) # Magic numbers to change
-                    angle = randint(0, 360)
+        planets = []
 
-                    r = randint(self.minRadius, self.maxRadius)
-                    x = system.center.x + math.cos(math.radians(angle)) * dist
-                    y = system.center.y + math.sin(math.radians(angle)) * dist
+        for _ in range(count):
+            planetType = random.choice(list(PLANET_TYPE.keys()))
+            typeData = PLANET_TYPE[planetType]
 
-                    pos = pygame.Vector2(x, y)
+            radius = random.randint(*typeData["radiusRange"])
+            color = random.choice(typeData["colors"])
 
+            placed = False
+            attempts = 0
+            currentMinDistance = minDistance
 
-                    ok = True
-                    for p in system.planets:
-                        needed = p.radius + r + self.minSpacing
-                        if (pos - p.pos).length_squared()  < needed**2:
-                            ok = False
-                            break
-                    if ok:
-                        color = (randint(0,255), randint(0,255), randint(0,255))
-                        planet = Planet((x, y), r, color)
-                        planetList.append(planet)
+            while not placed:
+                angle = random.uniform(0, 2 * math.pi)
+                dist = random.uniform(spread * 0.1, spread)
+                pos = pygame.Vector2(dist * math.cos(angle), dist * math.sin(angle))
 
+                tooClose = any( (pos - p.pos).length() < currentMinDistance + radius + p.radius for p in planets )
 
-        self.planets = planetList # Change so it's in a loop to generate a single planet
+                if not tooClose:
+                    self.planets.append(Planet(pos, radius, color, planetType=planetType))
+                    placed = True
+                else:
+                    attempts += 1
+                    if attemps % 20 == 0:
+                        currentMinDistance = max(50, currentMinDistance - 50)
+
+        # Change so it's in a loop to generate a single planet
         print("[Game] Generated planets", [p.name for p in self.planets], "\nat coordinates :\nx:\t", [p.pos.x for p in self.planets], "\ny:\t", [p.pos.y for p in self.planets])
+        print(f"[Game] Generated {len(self.planets)} plannets")
 
     def handleEvent(self, event):
         if event.type == pygame.KEYDOWN:
@@ -144,8 +117,19 @@ class GameScreen(Screen):
                     if getattr(planet, "inRange", False):
                         for p in self.planets:
                             p.showOverlay = False
+                            p.optionalText = ""
+                            p.buttons = []
 
                         planet.showOverlay = True
+                        if self.game.questManager.checkPlanetIsGiver(planet):
+                          planet.optionalText += " \nI have a quest !"
+                          self.buttons[1].setCallback(self.game.questManager.acceptQuest(planet))
+                          planet.buttons.append(self.buttons[0])
+                        if self.game.questManager.checkPlanetIsTarget(planet):
+                          planet.optionalText += "            I am a target!"
+                          self.buttons[1].setCallback(self.game.questManager.completeQuest(planet))
+
+
                         # Stop the player
                         self.savedVel = self.ship.vel.copy()
                         self.ship.vel = pygame.Vector2(0,0)
@@ -153,6 +137,7 @@ class GameScreen(Screen):
             elif event.key == pygame.K_c:
                 for p in self.planets:
                     p.showOverlay = False
+                    p.optionalText = ""
                 self.ship.vel = self.savedVel
                 self.overlayOpen = False
 
@@ -162,7 +147,7 @@ class GameScreen(Screen):
         if keys[pygame.K_EQUALS] or keys[pygame.K_KP_PLUS]:
             self.zoom = min(2, self.zoom + 1.5 * dt)
         if keys[pygame.K_MINUS] or keys[pygame.K_KP_MINUS]:
-            self.zoom = max(0.5, self.zoom - 0.5 * dt)
+            self.zoom = max(0.0001, self.zoom - 0.5 * dt)
 
         if self.overlayOpen:
             return # Early return
@@ -209,11 +194,15 @@ class GameScreen(Screen):
         zoom_txt = self.font.render(f"Zoom: {self.zoom:.2f}×", True, (200, 200, 200))
         shipInfo = self.font.render(f"Ship: {self.ship.name}", True, (200, 100, 30))
         shipPos = self.font.render(f"Pos: {self.ship.pos}", True, (200, 100, 30))
+        moneyInfo = self.font.render(f"Money: {self.game.getMoney()}", True, (200, 100, 30))
+        questInfo = self.font.render(f"Current Quest: {self.game.questManager.getActiveQuest()}", True, (200, 100, 30))
         surface.blit(fps, (10, 10))
         surface.blit(speed, (10, 30))
         surface.blit(zoom_txt, (10, 50))
         surface.blit(shipInfo, (10, 70))
         surface.blit(shipPos, (10, 90))
+        surface.blit(moneyInfo, (10, 110))
+        surface.blit(questInfo, (10, 130))
 
         # minimap (bottom-right)
         self.render_minimap(surface, cam, self.zoom)

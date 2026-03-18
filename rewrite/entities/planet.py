@@ -1,10 +1,29 @@
 import random
 
 import pygame
+from pygame.typing import RectLike
 
+from ui.button import Button
+
+
+# A dict to hold all types of planets
+PLANET_TYPE = {
+    "rocky": {
+        "colors": [(180, 120, 80), (160, 100, 60), (200, 140, 90), (140, 90, 60)],
+        "radiusRange": (30, 80),
+    },
+    "gasGiant": {
+        "colors": [(200, 160, 100), (180, 120, 80), (220, 180, 130), (160, 100, 60)],
+        "radiusRange": (100, 200),
+    },
+    "ice": {
+        "colors": [(160, 180, 200), (140, 160, 180), (120, 140, 160), (100, 120, 140)],
+        "radiusRange": (50, 100),
+    },
+}
 
 class Planet:
-    def __init__(self, pos, radius, color, name=None):
+    def __init__(self, pos, radius, color, name=None, planetType=None):
         """
         pos    : pygame.Vector2 en coords monde
         radius : rayon en px “monde”
@@ -14,8 +33,12 @@ class Planet:
         self.radius = radius
         self.color = color
         self.showOverlay = False
+        self.availableQuests = []
         self.inRange = False
         self.name = name if name else self.generateName()
+        self.planetType = planetType or "rocky"
+        self.optionalText = ""
+        self.buttons = []
 
     def generateName(self):
         self.letters = [
@@ -106,12 +129,14 @@ class Planet:
         pygame.draw.rect(surface, (30, 30, 60), rect)
         pygame.draw.rect(surface, (200, 200, 255), rect, 3)
 
-        self.title = font.render(self.name, True, (255, 255, 255))
+        self.title = font.render("Name: " + self.name, True, (255, 255, 255))
         surface.blit(self.title, (rect.x + 20, rect.y + 20))
-
+        self.planetTypeText = font.render("Type: " + self.planetType, True, (255, 255, 255))
+        surface.blit(self.planetTypeText, (rect.x + 20, rect.y + 40))
+        surface.blit(font.render(self.optionalText, True, (255, 255, 255)), (rect.x + 20, rect.y + 60))
         self.tips = font.render(" Press C to close ", True, (100, 100, 100))
         surface.blit(self.tips, (rect.x + 400, rect.y + 20))
-        self.content = font.render(
-            "Quêtes, Ressources, Boutique", True, (200, 200, 200)
-        )
-        surface.blit(self.content, (rect.x + 20, rect.y + 60))
+        if len(self.buttons) != 0:
+          for btn in self.buttons:
+            btn.render(surface)
+        # Button("Accept Quest",(rect.x + 400, rect.y + 20), None, font).render(surface)

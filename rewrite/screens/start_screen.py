@@ -21,7 +21,10 @@ class StartOptions(Screen):
 
         self.buttons = [
             Button(
-                "New Game", (self.width // 2, self.height // 2 - 50), self.newGame, font
+              "New Game",
+              (self.width // 2, self.height // 2 - 50),
+              self.newGame,
+              font
             ),
             Button(
                 "Load Game",
@@ -39,7 +42,7 @@ class StartOptions(Screen):
 
     def onEnter(self):
         self.data = self.game.getSaveData()
-        if self.data != None:
+        if self.data is not None:
             saveExists = True
         else:
             saveExists = False
@@ -53,8 +56,9 @@ class StartOptions(Screen):
             vel=pygame.Vector2(0, 0),
             angle=90,
         )
-        self.game.gameScreen.generateSystems()
-        self.game.gameScreen.generatePlanets()
+        # self.game.gameScreen.generatePlanets(count=12, spread=8000, minDistance=300)
+        self.game.gameScreen.generatePlanets(count=2, spread=80, minDistance=300)
+        self.game.initQuestManager()
         self.game.currentScreen = self.game.gameScreen
 
     def loadGame(self):

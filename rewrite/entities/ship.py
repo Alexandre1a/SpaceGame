@@ -147,6 +147,7 @@ class Ship:
         self.maxSpeed = maxSpeed
         self.drag = drag
         self.turnSpeed = turnSpeed
+        self.cargo = []
 
         # Etat du vaisseau
         self.pos = pygame.Vector2(0, 0)

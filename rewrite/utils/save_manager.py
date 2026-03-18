@@ -23,6 +23,7 @@ def saveGame(game):
         "vel": [game.selectedShip.vel.x, game.selectedShip.vel.y],
         "angle": game.selectedShip.angle,
         "zoom" : game.gameScreen.zoom,
+        "money": game.amount,
         # Plannets
         "planets": [serialize_planet(p) for p in game.gameScreen.planets],
     }
