@@ -111,35 +111,38 @@ class GameScreen(Screen):
         print(f"[Game] Generated {len(self.planets)} plannets")
 
     def handleEvent(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_e:
-                for planet in self.planets:
-                    if getattr(planet, "inRange", False):
-                        for p in self.planets:
-                            p.showOverlay = False
-                            p.optionalText = ""
-                            p.buttons = []
+      for btn in self.buttons:
+        btn.handleEvent(event)
+      if event.type == pygame.KEYDOWN:
+          if event.key == pygame.K_e:
+              for planet in self.planets:
+                  if getattr(planet, "inRange", False):
+                      for p in self.planets:
+                          p.showOverlay = False
+                          p.optionalText = ""
+                          p.buttons = []
 
-                        planet.showOverlay = True
-                        if self.game.questManager.checkPlanetIsGiver(planet):
-                          planet.optionalText += " \nI have a quest !"
-                          self.buttons[1].setCallback(self.game.questManager.acceptQuest(planet))
-                          planet.buttons.append(self.buttons[0])
-                        if self.game.questManager.checkPlanetIsTarget(planet):
-                          planet.optionalText += "            I am a target!"
-                          self.buttons[1].setCallback(self.game.questManager.completeQuest(planet))
-
-
-                        # Stop the player
-                        self.savedVel = self.ship.vel.copy()
-                        self.ship.vel = pygame.Vector2(0,0)
-                        self.overlayOpen = True
-            elif event.key == pygame.K_c:
-                for p in self.planets:
-                    p.showOverlay = False
-                    p.optionalText = ""
-                self.ship.vel = self.savedVel
-                self.overlayOpen = False
+                      planet.showOverlay = True
+                      if self.game.questManager.checkPlanetIsGiver(planet):
+                        planet.optionalText += " \nI have a quest !"
+                        self.buttons[0].setCallback(lambda p=planet: self.game.questManager.acceptQuest(p))
+                        planet.buttons.append(self.buttons[0])
+                        planet.buttons[0].setDisabled(False)
+                      if self.game.questManager.checkPlanetIsTarget(planet):
+                        planet.optionalText += "            I am a target!"
+                        self.buttons[1].setCallback(lambda p=planet: self.game.questManager.completeQuest(p))
+                        planet.buttons.append(self.buttons[1])
+                        planet.buttons[1].setDisabled(False)
+                      # Stop the player
+                      self.savedVel = self.ship.vel.copy()
+                      self.ship.vel = pygame.Vector2(0,0)
+                      self.overlayOpen = True
+          elif event.key == pygame.K_c:
+              for p in self.planets:
+                  p.showOverlay = False
+                  p.optionalText = ""
+              self.ship.vel = self.savedVel
+              self.overlayOpen = False
 
 
     def update(self, dt):
