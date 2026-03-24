@@ -46,7 +46,7 @@ class Planet:
             "no",
             "li",
             "ge",
-            "goy",
+            "new",
             "ven",
             "tura",
             "ex",
@@ -57,15 +57,13 @@ class Planet:
             "pha",
             "phyr",
             "mir",
-            "slop",
+            "bit",
             "ye",
             "xe",
             "cy",
             "ber",
         ]
-        self.name = random.choice(self.letters).capitalize() + random.choice(
-            self.letters
-        )
+        self.name = random.choice(self.letters).capitalize() + random.choice( self.letters )
         if random.random() < 0.4:
             self.name += f"-{random.randint(1, 99)}"
         return self.name

@@ -13,10 +13,20 @@ class QuestManager:
       self.game = game
       self.questList = []
       self.loadQuests()
-      self.currentQuest = self.questList[0]
+      self.currentQuest = None
 
     def getActiveQuest(self):
+      if self.currentQuest is None:
+        return "No active quest"
       return self.currentQuest.objective
+
+    def getActiveQuestPos(self):
+      """
+      Returns the pygame Vector of the target position
+      """
+      if self.currentQuest is None:
+        return None
+      return self.currentQuest.destination.pos
 
     def loadQuests(self):
       self.data = self.game.getSaveData()
@@ -31,18 +41,18 @@ class QuestManager:
     def checkPlanetIsGiver(self, planet):
       for i in range(len(self.questList)):
         if planet.name == self.questList[i].giver.name:
+          if self.questList[i].completed:
+            return False
           return True
         else:
           pass
       return False
 
     def checkPlanetIsTarget(self, planet):
-      for i in self.questList:
-        if planet.name == self.currentQuest.destination.name:
-          return True
-        else:
-          pass
-      return False
+      if self.currentQuest is None:
+        return False
+      return planet.name == self.currentQuest.destination.name
+
 
     def acceptQuest(self, planet):
       print("[QuestManager] Attempting to accept quest...")
@@ -55,6 +65,7 @@ class QuestManager:
           pass
       if self.questList[id].completed != True:
         self.currentQuest = self.questList[id]
+        planet.buttons[0].setDisabled(True)
       else:
         planet.buttons[0].setDisabled(True)
         # Quest is unavailable (completed)
@@ -62,21 +73,13 @@ class QuestManager:
 
     def completeQuest(self, planet):
       print("[QuestManager] Attempting to complete quest...")
-      for i in range(len(self.questList)):
-        if planet.name == self.questList[i].giver.name:
-          id = i
-        else:
-          pass
-      if id is None:
-        print("[QuestManager] ", planet.name, " has no quest !")
-
-      if planet.name == self.questList[id].destination.name:
-        if not self.questList[id].completed:
-          self.questList[id].completed = True
-          print("[QuestManager] Completed ", self.questList[id].objective)
-          self.game.phtonos.add(self.game, self.questList[id].reward)
+      if planet.name == self.currentQuest.destination.name:
+        if not self.currentQuest.completed:
+          self.currentQuest.completed = True
+          print("[QuestManager] Completed ", self.currentQuest.objective)
+          self.game.phtonos.add(self.game, self.currentQuest.reward)
           planet.buttons[1].setDisabled(True)
-          self.currentQuest = Quest("None", Planet(pygame.Vector2(0,0), 0, (0,0,0)), self.game, 0, 5948372)  # Dummy Quest
+          self.currentQuest = None
         else:
           planet.buttons[1].setDisabled(True)
       print("[QuestManager] Current global quest states:\n", [q.destination.name for q in self.questList], '\n', [q.giver.name for q in self.questList], '\n', [p.id for p in self.questList], '\n', [p.completed for p in self.questList])

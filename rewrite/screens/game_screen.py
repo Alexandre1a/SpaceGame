@@ -54,11 +54,11 @@ class GameScreen(Screen):
             int(width * 0.4), # 40% width
             int(height * 0.5), # 50 height
         )
-        # Procedural generation paramameters
         self.buttons = [
           Button("Accept Quest", (self.overlayRect.x + 100, self.overlayRect.y + 120) , None, self.font),
           Button("Complete Quest", (self.overlayRect.x + 400, self.overlayRect.y + 120) , None, self.font)
         ]
+        # Procedural generation paramameters
 
     # ===================== SHIP LOAD =====================
     def loadShip(self, ship, pos, vel, angle):
@@ -208,10 +208,11 @@ class GameScreen(Screen):
         surface.blit(questInfo, (10, 130))
 
         # minimap (bottom-right)
-        self.render_minimap(surface, cam, self.zoom)
+        self.renderMinimap(surface, cam, self.zoom)
+        self.renderQuestRadar(surface)
 
     # ===================== MINIMAP =====================
-    def render_minimap(self, surface, cam, zoom):
+    def renderMinimap(self, surface, cam, zoom):
         w, h = surface.get_size()
         mm_w, mm_h = 200, 120
         mm_x = w - mm_w - 10
@@ -225,7 +226,7 @@ class GameScreen(Screen):
         # VIEW_RANGE définit combien d'unités "monde" sont visibles
         # de chaque côté du vaisseau sur la minimap.
         # Augmente cette valeur pour "zoomer out" la minimap.
-        VIEW_RANGE = 3000
+        VIEW_RANGE = 3000/zoom
 
         # L'échelle convertit des unités monde en pixels minimap.
         # Ex: si VIEW_RANGE=3000 et mm_w=200, scale_x = 200/6000 ≈ 0.033 px/unité
@@ -279,3 +280,34 @@ class GameScreen(Screen):
         tip_x = int(center_mm_x + math.cos(rad) * 8)
         tip_y = int(center_mm_y + math.sin(rad) * 8)
         pygame.draw.line(surface, (255, 255, 100), (center_mm_x, center_mm_y), (tip_x, tip_y), 2)
+    def renderQuestRadar(self, surface):
+      """
+      Renders an arrow, the colour depends on the distance
+      Warning : The arrow can be quite buggy, rely on the color and the minmap !
+      """
+      quest = self.game.questManager.getActiveQuestPos()
+      if quest is None:
+        return
+      radarX = surface.get_width() - 80
+      radarY = surface.get_height() - 80
+
+      direction = quest - self.ship.pos
+      dist = direction.length()
+
+      # Normalise direction
+      direction = direction.normalize()
+
+      angle = math.atan2(direction.x, direction.y)
+      size = 25
+
+      p1 = (radarX + math.cos(angle)*size,
+            radarY + math.sin(angle)*size)
+      p2 = (radarX + math.cos(angle+2.5)*size/2,
+            radarY + math.sin(angle+2.5)*size/2)
+      p3 = (radarX + math.cos(angle-2.5)*size/2,
+            radarY + math.sin(angle-2.5)*size/2)
+
+      ratio = max(0, min(1, dist / 50000))
+      color = ( int(255*(1-ratio)), 0, int(255*ratio))
+
+      pygame.draw.polygon(surface, color, [p1, p2, p3])

@@ -56,8 +56,8 @@ class StartOptions(Screen):
             vel=pygame.Vector2(0, 0),
             angle=90,
         )
-        # self.game.gameScreen.generatePlanets(count=12, spread=8000, minDistance=300)
-        self.game.gameScreen.generatePlanets(count=2, spread=80, minDistance=300) # Reduce planet gen for testing
+        self.game.gameScreen.generatePlanets(count=12, spread=8000, minDistance=300)
+        #self.game.gameScreen.generatePlanets(count=2, spread=80, minDistance=300) # Reduce planet gen for testing
         self.game.initQuestManager()
         self.game.currentScreen = self.game.gameScreen
 
