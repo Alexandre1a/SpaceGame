@@ -11,6 +11,7 @@ from entities.ship import Ship
 
 # Répertoire contenant tous les assets du jeu
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
+MUSIC_DIR = os.path.join(os.path.dirname(__file__), "music")
 
 
 # Définition des polices disponibles
@@ -26,6 +27,11 @@ IMAGES = {
     "aurora": "aurora.jpg",
     "origin": "Origin.png",
     "600i": "600i.png",
+}
+
+MUSIC = {
+  "menu": "menu.ogg",
+  "main": "main.wav",
 }
 
 
@@ -88,6 +94,8 @@ def createPlaceholderImage(size=(64, 64), color=(255, 0, 255)):
     surface.fill(color)
     return surface
 
+def getMusicPath(filename):
+  return os.path.join(MUSIC_DIR, filename)
 
 def getAssetPath(filename):
     """

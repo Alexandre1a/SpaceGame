@@ -25,3 +25,13 @@ class Quest:
     self.reward    = reward
     self.id        = id
     self.completed = False
+
+  def toDict(self):
+    return {
+      "id" : self.id,
+      "completed" : self.completed
+    }
+
+  @classmethod
+  def fromDict(cls, data, planets):
+    pass

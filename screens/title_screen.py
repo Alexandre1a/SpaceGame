@@ -1,46 +1,140 @@
+"""
+Écran titre du jeu.
+Affiche le menu principal avec les options de jeu et l'argent du joueur.
+"""
+
 import pygame
 from screens.base_screen import Screen
 from ui.button import Button
+from ressources.ressources import getMusicPath
+
 
 class TitleScreen(Screen):
-    def __init__(self, game):
-        self.game = game
-        # On prend la surface de rendu depuis game.screen
-        wf, hf = game.screen.get_width(), game.screen.get_height()
-        # Obtenir les fonts
-        font = self.game.fonts['default']
+    """
+    Écran titre affichant le menu principal du jeu.
+    """
 
-        # Création des trois boutons centrés
-        self.buttons = [
-            Button("New Game",  (wf//2, hf//2 - 50), game.start_game,       font),
-            Button("Load Game", (wf//2, hf//2 - 100), game.load_game_from_file, font),
-            Button("Ships", (wf//2, hf//2),      game.open_ship_selection, font),
-            Button("Settings", (wf//2, hf//2 + 50), game.open_settings, font),
-            Button("Exit",  (wf//2, hf//2 + 100), game.quit,             font),
+    def __init__(self, game, width, height, font):
+        """
+        Initialise l'écran titre.
+
+        Args:
+            game: Référence vers l'objet Game principal
+        """
+        # Utilisé plus tard pour l'affichage
+        self._game = game
+        self._font = font
+
+        # Récupération des dimensions de l'écran
+        self._fontTitle = game.fonts["title"]
+        # Position verticale de départ pour les boutons
+        centerX = width // 2
+        startY = height // 2 - 100
+
+        # Création des boutons du menu
+        self._buttons = [
+            Button(
+                "Jouer",
+                (centerX, startY),
+                game.displayStartOptions,
+                font,
+            ),
+            Button(
+                "Sélection Vaisseau",
+                (centerX, startY + 60),
+                game.displayShipSelection,
+                font,
+            ),
+            Button(
+                "Paramètres",
+                (centerX, startY + 120),
+                game.displaySettingsScreen,
+                font,
+            ),
+            Button(
+                "Quitter",
+                (centerX, startY + 180),
+                game.quit,
+                font,
+            ),
         ]
 
+    def onEnter(self):
+      pygame.mixer.music.stop()
+      pygame.mixer.music.load(getMusicPath("menu.ogg"))
+      pygame.mixer.music.play(-1)
 
+    def handleEvent(self, event):
+        """
+        Gère les événements de l'écran titre.
 
-    def handle_event(self, event):
-        for btn in self.buttons:
-            btn.handle_event(event)
+        Args:
+            event: Événement pygame à traiter
+        """
+        # Passer l'événement à tous les boutons
+        for button in self._buttons:
+            button.handleEvent(event)
 
     def update(self, dt):
+        """
+        Met à jour la logique de l'écran titre.
+
+        Args:
+            dt: Delta time (temps écoulé depuis la dernière frame)
+        """
+        # L'écran titre est statique, pas de mise à jour nécessaire
         pass
 
     def render(self, surface):
-        # On utilise la surface passée ici pour le rendu
-        surface.fill((0, 0, 30))
-        # Création du texte
-        font = self.game.fonts['default']
-        # Déterminer le nom du vaisseau sélectionné
-        if self.game.selected_ship:
-            ship_name = self.game.selected_ship.name
+        """
+        Effectue le rendu de l'écran titre.
+
+        Args:
+            surface: Surface pygame sur laquelle dessiner
+        """
+        # Fond de l'espace (bleu très sombre)
+        surface.fill((5, 5, 20))
+
+        # === TITRE DU JEU ===
+        titleText = self._fontTitle.render("SPACE GAME", True, (100, 200, 255))
+        titleRect = titleText.get_rect(center=(surface.get_width() // 2, 80))
+        surface.blit(titleText, titleRect)
+
+        # === ARGENT DU JOUEUR ===
+        money = self._game.getMoney()
+        moneyText = self._font.render(
+            f"Crédits disponibles : {money:,} ¢",
+            True,
+            (255, 215, 0),  # Couleur or
+        )
+        moneyRect = moneyText.get_rect(center=(surface.get_width() // 2, 150))
+
+        # Fond semi-transparent pour le texte d'argent
+        bgRect = moneyRect.inflate(20, 10)
+        bgSurface = pygame.Surface(bgRect.size, pygame.SRCALPHA)
+        bgSurface.fill((255, 255, 0, 128))  # Noir semi-transparent
+        surface.blit(bgSurface, bgRect)
+        surface.blit(moneyText, moneyRect)
+
+        # === VAISSEAU SÉLECTIONNÉ ===
+        selectedShip = self._game.getSelectedShip()
+        if selectedShip:
+            shipName = selectedShip.getName()
+            shipInfoText = f"Vaisseau : {shipName}"
         else:
-            ship_name = "Gladius"
-        text_surf = font.render(f"Vaisseau choisi : {ship_name}", True, (255, 255, 255))
-        # Blit text
-        text_pos = (50, 50)
-        surface.blit(text_surf, text_pos)
-        for btn in self.buttons:
-            btn.render(surface)
+            shipInfoText = "Aucun vaisseau sélectionné"
+
+        shipText = self._font.render(shipInfoText, True, (150, 150, 255))
+        shipRect = shipText.get_rect(center=(surface.get_width() // 2, 200))
+        surface.blit(shipText, shipRect)
+
+        # === BOUTONS ===
+        for button in self._buttons:
+            button.render(surface)
+
+        # === VERSION DU JEU ===
+        versionText = self._font.render("v1.0.0", True, (80, 80, 80))
+        versionRect = versionText.get_rect(
+            bottomright=(surface.get_width() - 10, surface.get_height() - 10)
+        )
+        surface.blit(versionText, versionRect)

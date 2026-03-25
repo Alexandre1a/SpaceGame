@@ -1,142 +1,207 @@
+# Importe les dépendances requises
+import sys
+
 import pygame
 
-# import ctypes
-from resources import load_fonts, load_images
-from entities.ship import Ship
-from screens.title_screen import TitleScreen
-from screens.ship_selection import ShipSelectionScreen
-from screens.game_screen import GameScreen
-from screens.settings_screen import SettingsScreen
-from screens.pause_menu import PauseMenu
-from utils.settings_manager import load_settings, save_settings
-from utils.save_manager import *
+# Importe les sous-modules personalisés
+from ressources.ressources import loadFonts, loadImages
+from gameplay.quest_manager import QuestManager
+from screens.start_screen import StartOptions
 
-# ctypes.windll.shcore.SetProcessDpiAwareness(1)
+# Screens
+from entities.ship import KeyboardController, Ship  # , ShipAI, SimpleAIController
+from screens.game_screen import GameScreen
+from screens.pause_menu import PauseMenu
+from screens.settings_screen import SettingsScreen
+from screens.ship_selection import ShipSelectionScreen
+from screens.title_screen import TitleScreen
+
+# Utilitaire
+from utils.save_manager import loadSave, saveGame
+from utils.settings_manager import loadSettings, saveSettings
+from utils.phtonos import Phtonos
 
 
 class Game:
     def __init__(self):
+        """
+        Cette classe est la colone vertébrale du programe, elle aura toutes les valeurs requises par les autres composants
+        Tout est en camelCase
+        """
         # Initialise pygame
+        pygame.mixer.pre_init(44100, -16, 2, 512)
         pygame.init()
-        # Charge les paramètres enregistrés
-        self.settings = load_settings()
-
-        # Crée une balance temporaire
-        self.money = 0
-        # Charge l'argent
-        Save.loadMoney(self)
-        # Utiliser les settings pour créer l'écran avec la bonne résolution
-        # flags = pygame.FULLSCREEN if self.settings["fullscreen"] else 0
-        self.screen = pygame.display.set_mode(self.settings["resolution"])
-        # Défini le titre de la fenètre
-        pygame.display.set_caption("My Space Game")
         self.clock = pygame.time.Clock()
 
-        # Load assets
-        self.images = load_images()
-        self.fonts = load_fonts()
+        # Charge les paramètres
+        self.settings = loadSettings()
 
-        # Define ships
-        self.available_ships = [
+        # Initialise et crée les paramètres de l'écran
+        self.screen = pygame.display.set_mode(self.settings["resolution"])
+
+        # Défini le titre de la fenêtre
+        pygame.display.set_caption("SpaceGame")
+
+        # Charge les assets
+        self.images = loadImages()
+        self.fonts = loadFonts()
+
+        # Charge les vaisseaux disponibles
+        self.availableShips = [
             Ship(
                 "TestShip",
+                "Admin",
+                "S",
                 self.images["gladius"],
                 accel=1250,
-                max_speed=1500,
+                maxSpeed=5000,
                 drag=0,
-                turn_speed=300,
-                brand="Aegis",
+                turnSpeed=300,
+            ),
+            Ship(
+                "600i",
+                "Origin",
+                "B",
+                self.images["600i"],
+                accel=1250,
+                maxSpeed=2000,
+                drag=0,
+                turnSpeed=120,
             ),
         ]
-        self.selected_ship = None
+        # Prends un placeholder quand aucun vaisseau n'est choisi
+        self.selectedShip = self.availableShips[0]
 
+        # Crée le controller (Après le chargement de menu)
+        self.controller = KeyboardController()
+        # Charge la save
+        self.save = loadSave(self)
+        # Load the saved money
+        self.amount = 0
+        if self.save != None:
+          self.amount = self.save["money"]
+        else:
+          self.initPhtonos()
+          self.phtonos.add(self, 100)
+
+
+    @property
+    def currentScreen(self):
+        return self._currentScreen
+
+    @currentScreen.setter
+    def currentScreen(self, screen):
+        self._currentScreen = screen
+        screen.onEnter()
+
+    # Fonction pour afficher les différents écrans
+    def displayStartOptions(self):
+        # Todo
+        self.currentScreen = self.startOptions
+
+    def displayShipSelection(self):
+        self.currentScreen = self.shipSelect
+
+    def displaySettingsScreen(self):
+        self.currentScreen = self.settingsScreen
+
+    def displayMenu(self):
+        self.currentScreen = self.titleScreen
+
+    def saveGame(self):
+        saveGame(self)
+
+    def initScreens(self):
         # Screens
-        self.title_screen = TitleScreen(self)
-        self.ship_select = ShipSelectionScreen(self)
-        self.game_screen = GameScreen(self)
-        self.settings_screen = SettingsScreen(self)
-        self.pause_screen = PauseMenu(self)
-        self.current_screen = self.title_screen
-
-    def start_game(self):
-        if not self.selected_ship:
-            self.selected_ship = self.available_ships[0]
-
-        # Création d'une instance du vaisseau séléctionné
-        from entities.ship import Ship
-
-        template = self.selected_ship
-        fresh_ship = Ship(
-            template.name,
-            template.sprite,
-            template.acceleration,
-            template.max_speed,
-            template.drag,
-            template.turn_speed,
+        self.titleScreen = TitleScreen(
+            self,
+            self.screen.get_width(),
+            self.screen.get_height(),
+            self.fonts["default"],
+        )
+        self.shipSelect = ShipSelectionScreen(
+            self,
+            self.screen.get_width(),
+            self.screen.get_height(),
+            self.fonts["default"],
+            self.fonts["title"],
+        )
+        self.gameScreen = GameScreen(
+            self,
+            self.screen.get_width(),
+            self.screen.get_height(),
+            self.fonts["default"],
+            self.controller,
+        )
+        self.settingsScreen = SettingsScreen(
+            self,
+            self.screen.get_width(),
+            self.screen.get_height(),
+            self.fonts["default"],
+            self.fonts["title"],
+            self.settings,
+        )
+        self.pauseScreen = PauseMenu(
+            self,
+            self.screen.get_width(),
+            self.screen.get_height(),
+            self.fonts["default"],
+        )
+        self.startOptions = StartOptions(
+            self,
+            self.screen.get_width(),
+            self.screen.get_height(),
+            self.fonts["default"],
         )
 
-        self.selected_ship = fresh_ship
-        self.game_screen.load_ship(
-            fresh_ship, reset=True
-        )  # Si le reset est vrai, il remet la position à 0
-        self.current_screen = self.game_screen
+    def initPhtonos(self):
+      self.phtonos = Phtonos()
 
-    def open_ship_selection(self):
-        self.current_screen = self.ship_select
+    def initQuestManager(self):
+      self.questManager = QuestManager(self)
 
-    def go_to_menu(self):
-        self.current_screen = self.title_screen
-
-    def pause(self):
-        self.current_screen = self.pause_screen
-
-    def open_settings(self):
-        self.current_screen = self.settings_screen
-
-    def save_game(self):
-        if self.selected_ship:
-            save_game(self.selected_ship)
-
-    def load_game_from_file(self):
-        ok = load_game(self)
-        if ok:
-            self.current_screen = self.game_screen
-
-    def rebuild_screens(
-        self,
-    ):  # Permet de recréer les écrans (après changement de résolution par exemple)
-        """Recrée tous les écrans pour s'adapter à la nouvelle résolution"""
-        # Sauvegarder l'écran actuel
-        current = self.current_screen
-
-        # Recréer tous les écrans avec les nouvelles dimensions
-        self.title_screen = TitleScreen(self)
-        self.ship_select = ShipSelectionScreen(self)
-        self.game_screen = GameScreen(self)
-        self.settings_screen = SettingsScreen(self)
-        self.pause_screen = PauseMenu(self)
-
-        # Restaurer le vaisseau dans game_screen si nécessaire
-        if self.selected_ship:
-            self.game_screen.load_ship(self.selected_ship, reset=False)
-
-        # Remettre le bon écran actif
-        if current == self.title_screen or isinstance(current, TitleScreen):
-            self.current_screen = self.title_screen
-        elif isinstance(current, ShipSelectionScreen):
-            self.current_screen = self.ship_select
-        elif isinstance(current, GameScreen):
-            self.current_screen = self.game_screen
-        elif isinstance(current, SettingsScreen):
-            self.current_screen = self.settings_screen
-        elif isinstance(current, PauseMenu):
-            self.current_screen = self.pause_screen
+    def getSaveData(self):
+        self.save = loadSave(self)
+        return self.save
 
     def quit(self):
-        pygame.quit()
-        exit()
+        sys.exit()
+
+    # ==================== GETTERS ====================
+    """ Inutile puisque on passe directement les valeurs dans la création des écrans
+    def getWidth(self):
+        return self.screen.get_width()
+
+    def getHeight(self):
+        return self.screen.get_height()
+
+    def getFonts(self):
+        return self.fonts
+    """
+
+    def getAvailableShips(self):
+        return self.availableShips
+
+    def getMoney(self):
+        return self.amount
+
+    def getSelectedShip(self):
+        return self.selectedShip
+
+    def getSettings(self):
+        return self.settings
+
+    # ==================== SETTER ====================
+
+    def setSelectedShip(self, ship):
+        if ship in self.availableShips:
+            self.selectedShip = ship
+        else:
+            return "Please set a correct ship"
 
     def run(self):
+        self.initScreens()
+        self.currentScreen = self.titleScreen
         while True:
             dt = self.clock.tick(self.settings["fps"]) / 1000.0
             for event in pygame.event.get():
@@ -145,17 +210,28 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if (
                         event.key == pygame.K_p
-                        and self.current_screen == self.game_screen
+                        and self.currentScreen == self.gameScreen
                     ):
                         # Toggle pause
-                        self.current_screen = self.pause_screen
+                        self.currentScreen = self.pauseScreen
+                self.currentScreen.handleEvent(event)
 
-                self.current_screen.handle_event(event)
-
-            self.current_screen.update(dt)
-            self.current_screen.render(self.screen)
+            self.currentScreen.update(dt)
+            self.currentScreen.render(self.screen)
             pygame.display.flip()
 
 
 if __name__ == "__main__":
     Game().run()
+
+
+def render_overlay(self, surface, font):
+    if not self.show_overlay:
+        return
+
+    overlay_rect = pygame.Rect(100, 100, 600, 400)
+    pygame.draw.rect(surface, (30, 30, 60), overlay_rect)
+    pygame.draw.rect(surface, (200, 200, 255), overlay_rect, 3)
+
+    title = font.render(self.name, True, (255, 255, 255))
+    surface.blit(title, (overlay_rect.x + 20, overlay_rect.y + 20))

@@ -1,50 +1,52 @@
-import json, os
+import gzip
+import json
+import os
 
-SAVE_FILE = "savegame.json"
+import pygame
 
-def save_game(ship):
+SAVE_FILE = "savegame.json.gz"
+
+
+# utilitaires pour planets
+def serialize_planet(p):
+    return p.to_dict()
+
+
+def deserialize_planet(d):
+    return __import__("entities.planet", fromlist=["Planet"]).Planet.from_dict(d)
+
+
+def saveGame(game):
     data = {
-        "ship": ship.name,
-        "pos": [ship.pos.x, ship.pos.y],
-        "vel": [ship.vel.x, ship.vel.y],
-        "angle": ship.angle,
+        "ship": game.selectedShip.name,
+        "pos": [game.selectedShip.pos.x, game.selectedShip.pos.y],
+        "vel": [game.selectedShip.vel.x, game.selectedShip.vel.y],
+        "angle": game.selectedShip.angle,
+        "zoom" : game.gameScreen.zoom,
+        "money": game.amount,
+        # Plannets
+        "planets": [serialize_planet(p) for p in game.gameScreen.planets],
+        "quests": game.questManager.toDict(),
     }
-    with open(SAVE_FILE, "w") as f:
-        json.dump(data, f)
+    with gzip.open(SAVE_FILE, "wb") as f:
+        f.write(json.dumps(data).encode("utf-8"))
+    print("[SaveManager] Game saved (gzipped).")
+    print("[SaveManager] Saved data:", data)
 
-def load_game(game):
+
+def loadSave(game):
     if not os.path.exists(SAVE_FILE):
-        return False
-    with open(SAVE_FILE, "r") as f:
-        data = json.load(f)
-
-    # retrouver le modèle du vaisseau par nom
-    template = None
-    for ship in game.available_ships:
-        if ship.name == data["ship"]:
-            template = ship
-            break
-
-    if not template:
-        return False
-
-    # recréer un vaisseau neuf basé sur le modèle
-    from entities.ship import Ship
-    ship = Ship(
-        template.name,
-        template.sprite,
-        template.acceleration,
-        template.max_speed,
-        template.drag,
-        template.turn_speed,
+        print("[SaveManager] Can't find savefile")
+        return None
+    with gzip.open(SAVE_FILE, "rb") as f:
+        data = json.loads(f.read().decode("utf-8"))
+    print("[SaveManager] Save file loaded successfully")
+    # Ship
+    data["ship"] = game.selectedShip = next(
+        (ship for ship in game.availableShips if ship.name == data["ship"]), None
     )
 
-    # appliquer l’état sauvegardé
-    ship.pos.xy = data["pos"]
-    ship.vel.xy = data["vel"]
-    ship.angle = data["angle"]
+    data["planets"] = [deserialize_planet(p) for p in data["planets"]]
 
-    # charger dans la partie
-    game.selected_ship = ship
-    game.game_screen.load_ship(ship, reset=False)
-    return True
+    print("[SaveManger] Loaded data: ", data)
+    return data
