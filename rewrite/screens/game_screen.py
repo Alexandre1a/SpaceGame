@@ -288,8 +288,8 @@ class GameScreen(Screen):
       quest = self.game.questManager.getActiveQuestPos()
       if quest is None:
         return
-      radarX = surface.get_width() - 80
-      radarY = surface.get_height() - 80
+      radarX = surface.get_width() - 120
+      radarY = surface.get_height() - 200
 
       direction = quest - self.ship.pos
       dist = direction.length()
