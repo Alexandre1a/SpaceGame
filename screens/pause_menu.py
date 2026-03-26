@@ -7,10 +7,10 @@ from ui.button import Button
 class PauseMenu(Screen):
     def __init__(self, game, width, height, font):
         """
-        Initialise l'écran de pause.
+        Init the pause screen
 
         Args:
-            game: Référence vers l'objet Game principal
+            game: is used to use global functions and change screens
         """
         self.game = game
         self.width = width

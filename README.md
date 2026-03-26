@@ -25,4 +25,14 @@ Nous proposons une flake nix, pour l'utiliser
 ```
 nix develop
 ```
-ou avec direnv
+ou avec direnv (l'.envrc est fourni)
+```
+direnv allow
+```
+
+### Legacy OSs
+Pour les autres systèmes type GNU/Linux ou Windows, il suffit d'installer python et pygame.
+
+Pour lancer le jeu, il suffit de lancer un symple `python main.py` ou `python3 main.py` selon les systèmes.
+
+

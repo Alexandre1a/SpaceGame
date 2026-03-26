@@ -1,22 +1,23 @@
-# Importe les dépendances requises
+#===========
+#= Imports =
+#===========
+# Python
 import sys
-
 import pygame
 
-# Importe les sous-modules personalisés
+# Custom modules
 from ressources.ressources import loadFonts, loadImages
 from gameplay.quest_manager import QuestManager
-from screens.start_screen import StartOptions
-
+from entities.ship import KeyboardController, Ship
 # Screens
-from entities.ship import KeyboardController, Ship  # , ShipAI, SimpleAIController
 from screens.game_screen import GameScreen
 from screens.pause_menu import PauseMenu
 from screens.settings_screen import SettingsScreen
 from screens.ship_selection import ShipSelectionScreen
 from screens.title_screen import TitleScreen
+from screens.start_screen import StartOptions
 
-# Utilitaire
+# Utils
 from utils.save_manager import loadSave, saveGame
 from utils.settings_manager import loadSettings, saveSettings
 from utils.phtonos import Phtonos
@@ -25,28 +26,29 @@ from utils.phtonos import Phtonos
 class Game:
     def __init__(self):
         """
-        Cette classe est la colone vertébrale du programe, elle aura toutes les valeurs requises par les autres composants
-        Tout est en camelCase
+        This is the "spine" of the game, it centralise all values required for other compoments
         """
-        # Initialise pygame
+        print("SpaceGame Copyright (C) 2026 Alexandre Delcamp--Enache, Pablo Perez\nThis program comes with ABSOLUTLY NO WARRANTY !\nThis is a free software, and you are welcome to redistribute it under certain condtions.\nSee the GNU/GPL License for more details")
+
+        # Init Pygame
         pygame.mixer.pre_init(44100, -16, 2, 512)
         pygame.init()
         self.clock = pygame.time.Clock()
 
-        # Charge les paramètres
+        # Load Settings
         self.settings = loadSettings()
 
-        # Initialise et crée les paramètres de l'écran
+        # Init the screen and sets some parameters
         self.screen = pygame.display.set_mode(self.settings["resolution"])
 
-        # Défini le titre de la fenêtre
+        # Sets the window title
         pygame.display.set_caption("SpaceGame")
 
-        # Charge les assets
+        # Load assets
         self.images = loadImages()
         self.fonts = loadFonts()
 
-        # Charge les vaisseaux disponibles
+        # Create available ships
         self.availableShips = [
             Ship(
                 "TestShip",
@@ -69,14 +71,14 @@ class Game:
                 turnSpeed=120,
             ),
         ]
-        # Prends un placeholder quand aucun vaisseau n'est choisi
+        # Selects a placeholder ship if none is selected
         self.selectedShip = self.availableShips[0]
 
-        # Crée le controller (Après le chargement de menu)
+        # Create the controller for the player to use
         self.controller = KeyboardController()
-        # Charge la save
+        # Loads the save
         self.save = loadSave(self)
-        # Load the saved money
+        # Load the saved money (uses save data)
         self.amount = 0
         if self.save != None:
           self.amount = self.save["money"]
@@ -94,9 +96,10 @@ class Game:
         self._currentScreen = screen
         screen.onEnter()
 
-    # Fonction pour afficher les différents écrans
+    #====================
+    #= Screen switchers =
+    #====================
     def displayStartOptions(self):
-        # Todo
         self.currentScreen = self.startOptions
 
     def displayShipSelection(self):
@@ -112,47 +115,51 @@ class Game:
         saveGame(self)
 
     def initScreens(self):
-        # Screens
-        self.titleScreen = TitleScreen(
-            self,
-            self.screen.get_width(),
-            self.screen.get_height(),
-            self.fonts["default"],
-        )
-        self.shipSelect = ShipSelectionScreen(
-            self,
-            self.screen.get_width(),
-            self.screen.get_height(),
-            self.fonts["default"],
-            self.fonts["title"],
-        )
-        self.gameScreen = GameScreen(
-            self,
-            self.screen.get_width(),
-            self.screen.get_height(),
-            self.fonts["default"],
-            self.controller,
-        )
-        self.settingsScreen = SettingsScreen(
-            self,
-            self.screen.get_width(),
-            self.screen.get_height(),
-            self.fonts["default"],
-            self.fonts["title"],
-            self.settings,
-        )
-        self.pauseScreen = PauseMenu(
-            self,
-            self.screen.get_width(),
-            self.screen.get_height(),
-            self.fonts["default"],
-        )
-        self.startOptions = StartOptions(
-            self,
-            self.screen.get_width(),
-            self.screen.get_height(),
-            self.fonts["default"],
-        )
+      """
+      This function is made to (re)generate the correct screens,
+      we pass the height, the width and the fonts to use
+      """
+      self.titleScreen = TitleScreen(
+          self,
+          self.getWidth(),
+          self.getHeight(),
+          self.getFonts()["default"],
+          self.getFonts()["title"],
+      )
+      self.shipSelect = ShipSelectionScreen(
+          self,
+          self.getWidth(),
+          self.getHeight(),
+          self.getFonts()["default"],
+          self.getFonts()["title"],
+      )
+      self.gameScreen = GameScreen(
+          self,
+          self.getWidth(),
+          self.getHeight(),
+          self.getFonts()["default"],
+          self.controller,
+      )
+      self.settingsScreen = SettingsScreen(
+          self,
+          self.getWidth(),
+          self.getHeight(),
+          self.getFonts()["default"],
+          self.getFonts()["title"],
+          self.settings,
+      )
+      self.pauseScreen = PauseMenu(
+          self,
+          self.getWidth(),
+          self.getHeight(),
+          self.getFonts()["default"],
+      )
+      self.startOptions = StartOptions(
+          self,
+          self.getWidth(),
+          self.getHeight(),
+          self.getFonts()["default"],
+      )
 
     def initPhtonos(self):
       self.phtonos = Phtonos()
@@ -168,7 +175,6 @@ class Game:
         sys.exit()
 
     # ==================== GETTERS ====================
-    """ Inutile puisque on passe directement les valeurs dans la création des écrans
     def getWidth(self):
         return self.screen.get_width()
 
@@ -177,7 +183,6 @@ class Game:
 
     def getFonts(self):
         return self.fonts
-    """
 
     def getAvailableShips(self):
         return self.availableShips
@@ -223,15 +228,3 @@ class Game:
 
 if __name__ == "__main__":
     Game().run()
-
-
-def render_overlay(self, surface, font):
-    if not self.show_overlay:
-        return
-
-    overlay_rect = pygame.Rect(100, 100, 600, 400)
-    pygame.draw.rect(surface, (30, 30, 60), overlay_rect)
-    pygame.draw.rect(surface, (200, 200, 255), overlay_rect, 3)
-
-    title = font.render(self.name, True, (255, 255, 255))
-    surface.blit(title, (overlay_rect.x + 20, overlay_rect.y + 20))

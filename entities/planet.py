@@ -25,9 +25,9 @@ PLANET_TYPE = {
 class Planet:
     def __init__(self, pos, radius, color, name=None, planetType=None):
         """
-        pos    : pygame.Vector2 en coords monde
-        radius : rayon en px “monde”
-        color  : tuple RGB
+        pos    : pygame.Vector2 in world coordinates
+        radius : radius in pixels
+        color  : RGB tuple
         """
         self.pos = pygame.Vector2(pos)
         self.radius = radius
@@ -69,7 +69,6 @@ class Planet:
         return self.name
 
     def render(self, surface, cameraOffset, zoom):
-        # transforme coords monde → écran
         self.screenPos = (self.pos - cameraOffset) * zoom
         self.screenRadius = int(self.radius * zoom)
         if self.screenRadius > 1:
@@ -95,7 +94,7 @@ class Planet:
         r = self.radius + margin
         return (p - self.pos).length_squared() < (r * r)
 
-    def to_dict(self):
+    def toDict(self):
         return {
             "pos": [self.pos.x, self.pos.y],
             "radius": self.radius,
@@ -104,8 +103,7 @@ class Planet:
         }
 
     @classmethod
-    def from_dict(cls, data):
-        # assure que pos est Vector2 et color est tuple
+    def fromDict(cls, data):
         pos = pygame.Vector2(data["pos"])
         radius = data["radius"]
         color = tuple(data["color"])
@@ -114,11 +112,11 @@ class Planet:
         p.showOverlay = data.get("showOverlay", False)
         return p
 
-    def to_save_data(self):
+    def toSaveData(self):
         return [(self.pos.x, self.pos.y), self.radius, self.color, self.name]
 
     @staticmethod
-    def from_save_data(data):
+    def fromSaveData(data):
         return Planet(data[0], data[1], data[2], data[3])
 
     def renderOverlay(self, surface, font, rect):
@@ -137,4 +135,3 @@ class Planet:
         if len(self.buttons) != 0:
           for btn in self.buttons:
             btn.render(surface)
-        # Button("Accept Quest",(rect.x + 400, rect.y + 20), None, font).render(surface)

@@ -7,13 +7,13 @@ import pygame
 SAVE_FILE = "savegame.json.gz"
 
 
-# utilitaires pour planets
-def serialize_planet(p):
-    return p.to_dict()
+# Util for planets
+def serializePlanet(p):
+    return p.toDict()
 
 
-def deserialize_planet(d):
-    return __import__("entities.planet", fromlist=["Planet"]).Planet.from_dict(d)
+def deserializePlanet(d):
+    return __import__("entities.planet", fromlist=["Planet"]).Planet.fromDict(d)
 
 
 def saveGame(game):
@@ -25,7 +25,7 @@ def saveGame(game):
         "zoom" : game.gameScreen.zoom,
         "money": game.amount,
         # Plannets
-        "planets": [serialize_planet(p) for p in game.gameScreen.planets],
+        "planets": [serializePlanet(p) for p in game.gameScreen.planets],
         "quests": game.questManager.toDict(),
     }
     with gzip.open(SAVE_FILE, "wb") as f:
@@ -46,7 +46,7 @@ def loadSave(game):
         (ship for ship in game.availableShips if ship.name == data["ship"]), None
     )
 
-    data["planets"] = [deserialize_planet(p) for p in data["planets"]]
+    data["planets"] = [deserializePlanet(p) for p in data["planets"]]
 
     print("[SaveManger] Loaded data: ", data)
     return data

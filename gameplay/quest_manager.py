@@ -16,6 +16,11 @@ class QuestManager:
     self.currentQuest = None
 
   def getActiveQuest(self):
+    """
+    Returns the current quest objective,
+    if one is tracked,
+    a string if none is tracked
+    """
     if self.currentQuest is None:
       return "No active quest"
     return self.currentQuest.objective
@@ -29,24 +34,25 @@ class QuestManager:
     return self.currentQuest.destination.pos
 
   def loadQuests(self):
+    """
+    Loads quests from the save,
+    generate them if there is no save
+    """
     self.data = self.game.getSaveData()
-
     if self.data is None:
       for i in range(len(self.game.gameScreen.planets)):
         quest = DeliveryQuest("Deliver", self.game.gameScreen.planets[i], self.game, 10, random.choice(self.game.gameScreen.planets), i)
         self.questList.append(quest)
       print("[QuestManager] Generated ", len(self.questList), "quests with destination", [q.destination.name for q in self.questList], "\nand source ", [q.giver.name for q in self.questList]," and id ", [p.id for p in self.questList])
     else:
-      for quest in self.questList:
-        if quest.id in self.data["questStates"]:
-          quest.completed = self.data["questStates"][quest.id]
+      # Todo
+      pass
 
-      currentId = self.data.get("currentQuestId")
-
-      if currentId is None:
-        self.currentQuest = next( (q for q in self.questList if q.id == currentId), None)
-
-  def checkPlanetIsGiver(self, planet):
+  def checkPlanetIsGiver(self, planet) -> bool:
+    """
+    Returns a bool,
+    Checls if the planet is a quest giver
+    """
     for i in range(len(self.questList)):
       if planet.name == self.questList[i].giver.name:
         if self.questList[i].completed:
@@ -56,14 +62,17 @@ class QuestManager:
         pass
     return False
 
-  def checkPlanetIsTarget(self, planet):
+  def checkPlanetIsTarget(self, planet) -> bool:
+    """
+    Returns a bool,
+    Check if a planet is the target of the current quest
+    """
     if self.currentQuest is None:
       return False
     return planet.name == self.currentQuest.destination.name
 
 
   def acceptQuest(self, planet):
-    print("[QuestManager] Attempting to accept quest...")
     # Need to verfy is quest is avaliable
     # Planet is used to get questID (source is unique)
     for i in range(len(self.questList)):
@@ -94,6 +103,6 @@ class QuestManager:
 
   def toDict(self):
     return {
-      "questStates" : {q.id: q.completed for q in self.questList},
-      "currentQuestId": self.currentQuest.id if self.currentQuest else None,
+      "questList": self.questList,
+      "currentQuest": self.currentQuest,
     }

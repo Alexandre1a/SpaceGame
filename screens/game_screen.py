@@ -1,15 +1,14 @@
-from cmath import rect
-import json
+#===========
+#= Imports =
+#===========
+# Python
 import math
-import random
-from collections import OrderedDict
-from random import randbytes, randint
-
 import pygame
+import random
 
+# Custom
 from entities.planet import Planet, PLANET_TYPE
-from entities.ship import AdvancedAIController, Ship
-from gameplay.quest_manager import QuestManager
+from entities.ship import FollowerAIController, Ship
 from screens.base_screen import Screen
 from ui.button import Button
 from ressources.ressources import getMusicPath
@@ -29,59 +28,49 @@ class GameScreen(Screen):
         self.font = font
         self.overlayOpen = False
         self.savedVel = pygame.Vector2(0,0) # To Stop
-        enemy_ship = Ship(
-            "Enemy1",
-            "Alien",
-            "S",
-            sprite=self.game.images["600i"],
-            accel=1000,
-            maxSpeed=3000,
-            drag=0,
-            turnSpeed=180,
-        )
-        enemy_ship.pos = pygame.Vector2(500, 500)
-
-        # Créer l’IA qui suit le joueur
-        enemy_ai = AdvancedAIController(self.ship)
-
-        # Stocker dans une liste d’ennemis
-        self.enemies = [(enemy_ship, enemy_ai)]
-
         self.planets = []
 
         self.overlayRect = pygame.Rect(
             int(width * 0.05), # 5% From left
             int(height * 0.15), # 15% From right
             int(width * 0.4), # 40% width
-            int(height * 0.5), # 50 height
+            int(height * 0.5), # 50% height
         )
+
         self.buttons = [
           Button("Accept Quest", (self.overlayRect.x + 100, self.overlayRect.y + 120) , None, self.font),
           Button("Complete Quest", (self.overlayRect.x + 400, self.overlayRect.y + 120) , None, self.font)
         ]
-        # Procedural generation paramameters
 
-    # ===================== SHIP LOAD =====================
+    def onEnter(self):
+      pygame.mixer.music.stop()
+      pygame.mixer.music.load(getMusicPath("main.wav"))
+      pygame.mixer.music.play(-1)
+
+    #================
+    #= Save Loading =
+    #================
+
     def loadShip(self, ship, pos, vel, angle):
         self.ship = ship
         self.ship.pos = pygame.Vector2(pos)
         self.ship.vel = pygame.Vector2(vel)
         self.ship.angle = angle
 
-    def onEnter(self):
-      pygame.mixer.music.stop()
-      pygame.mixer.music.load(getMusicPath("main.ogg"))
-      pygame.mixer.music.play(-1)
-
     def loadPlanets(self, planets):
         self.planets = planets
         print("[Game] Loaded plannets", [p.name for p in self.planets])
 
-
+    #==================
+    #= Procedural Gen =
+    #==================
 
     def generatePlanets(self, count=12, spread=8000, minDistance=300):
         ''''
-        Genère un nombre "count" de plannètes
+        Generates planets based on the parameters
+        count: overhall planet count
+        spread: how much space they occupy
+        minDistantce: the minimal distance form eachother
         '''
         print("[GameScreen] Generating planets...")
         planets = []
@@ -109,10 +98,9 @@ class GameScreen(Screen):
                     placed = True
                 else:
                     attempts += 1
-                    if attemps % 20 == 0:
+                    if attempts % 20 == 0:
                         currentMinDistance = max(50, currentMinDistance - 50)
 
-        # Change so it's in a loop to generate a single planet
         print("[Game] Generated planets", [p.name for p in self.planets], "\nat coordinates :\nx:\t", [p.pos.x for p in self.planets], "\ny:\t", [p.pos.y for p in self.planets])
         print(f"[Game] Generated {len(self.planets)} plannets")
 
@@ -121,6 +109,7 @@ class GameScreen(Screen):
         btn.handleEvent(event)
       if event.type == pygame.KEYDOWN:
           if event.key == pygame.K_e:
+            # Overlay, to accept quest and complete them
               for planet in self.planets:
                   if getattr(planet, "inRange", False):
                       for p in self.planets:
@@ -159,7 +148,7 @@ class GameScreen(Screen):
             self.zoom = max(0.0001, self.zoom - 0.5 * dt)
 
         if self.overlayOpen:
-            return # Early return
+            return
 
         for planet in self.planets:
             if planet.collidePoints(self.ship.pos, margin=10):
@@ -172,35 +161,27 @@ class GameScreen(Screen):
             else self.playerController.getControls(self.ship)
         )
         self.ship.update(dt, controls)
-        # update enemies
-        """
-        for enemy, ai in self.enemies:
-            controls = ai.getControls(enemy, dt)
-            enemy.update(dt, controls)
-        """
 
-    # ===================== RENDER =====================
+    #=============
+    #= Rendering =
+    #=============
     def render(self, surface):
         surface.fill((10, 10, 30))
-        # camera centered
+        # Center the camera
         half = pygame.Vector2(surface.get_size()) / 2
         cam = self.ship.pos - half / self.zoom
 
-        # draw planets
+        # Draw planets
         for planet in self.planets:
             planet.render(surface, cam, self.zoom)
 
-        # draw ship
-        """
-        for enemy, _ in self.enemies:
-            enemy.render(surface, cam, self.zoom)
-        """
+        # Draw ship
         self.ship.render(surface, cam, self.zoom)
 
         for planet in self.planets:
             planet.renderOverlay(surface, self.font, self.overlayRect)
 
-        # debug info
+        # Debug info
         fps = self.font.render(f"FPS: {self.game.clock.get_fps():.1f}", True, (200, 200, 50))
         speed = self.font.render(f"Speed: {self.ship.vel.length():.1f}", True, (0, 255, 255))
         zoom_txt = self.font.render(f"Zoom: {self.zoom:.2f}×", True, (200, 200, 200))
@@ -216,84 +197,85 @@ class GameScreen(Screen):
         surface.blit(moneyInfo, (10, 110))
         surface.blit(questInfo, (10, 130))
 
-        # minimap (bottom-right)
-        self.renderMinimap(surface, cam, self.zoom)
+        self.renderMinimap(surface, self.zoom)
         self.renderQuestRadar(surface)
 
-    # ===================== MINIMAP =====================
-    def renderMinimap(self, surface, cam, zoom):
-        w, h = surface.get_size()
-        mm_w, mm_h = 200, 120
-        mm_x = w - mm_w - 10
-        mm_y = h - mm_h - 10
+    #=======================
+    #=        Utils        =
+    #= Minimap/Quest Radar =
+    #=======================
+    def renderMinimap(self, surface, zoom):
+      """
+      Renders a simple minimap
+      surface: the pygame surface to draw to
+      zoom: zoom level, used to scale the minimap
+      """
+      w, h = surface.get_size()
+      mm_w, mm_h = 200, 120
+      mm_x = w - mm_w - 10
+      mm_y = h - mm_h - 10
 
-        # Fond et bordure
-        mm_rect = pygame.Rect(mm_x, mm_y, mm_w, mm_h)
-        pygame.draw.rect(surface, (15, 15, 25), mm_rect)
-        pygame.draw.rect(surface, (100, 100, 140), mm_rect, 2)
+      # Background and border
+      mm_rect = pygame.Rect(mm_x, mm_y, mm_w, mm_h)
+      pygame.draw.rect(surface, (15, 15, 25), mm_rect)
+      pygame.draw.rect(surface, (100, 100, 140), mm_rect, 2)
 
-        # VIEW_RANGE définit combien d'unités "monde" sont visibles
-        # de chaque côté du vaisseau sur la minimap.
-        # Augmente cette valeur pour "zoomer out" la minimap.
-        VIEW_RANGE = 3000/zoom
+      VIEW_RANGE = 3000/zoom
 
-        # L'échelle convertit des unités monde en pixels minimap.
-        # Ex: si VIEW_RANGE=3000 et mm_w=200, scale_x = 200/6000 ≈ 0.033 px/unité
-        scale_x = mm_w / (2 * VIEW_RANGE)
-        scale_y = mm_h / (2 * VIEW_RANGE)
+      # Convert from world coordinates to minimap coordinates
+      scale_x = mm_w / (2 * VIEW_RANGE)
+      scale_y = mm_h / (2 * VIEW_RANGE)
 
-        # Le centre de la minimap correspond toujours à la position du vaisseau.
-        # On calcule le décalage depuis ce centre pour chaque objet.
-        center_mm_x = mm_x + mm_w // 2
-        center_mm_y = mm_y + mm_h // 2
+      # The center of the minmap si the ship pos
+      # Compute the gap from the center for each object
+      center_mm_x = mm_x + mm_w // 2
+      center_mm_y = mm_y + mm_h // 2
 
-        # Dessiner les planètes
-        for p in self.planets:
-            dx = p.pos.x - self.ship.pos.x
-            dy = p.pos.y - self.ship.pos.y
+      for p in self.planets:
+          dx = p.pos.x - self.ship.pos.x
+          dy = p.pos.y - self.ship.pos.y
 
-            sx = int(center_mm_x + dx * scale_x)
-            sy = int(center_mm_y + dy * scale_y)
+          sx = int(center_mm_x + dx * scale_x)
+          sy = int(center_mm_y + dy * scale_y)
 
-            # On calcule le rayon en pixels sur la minimap
-            r = max(2, int(p.radius * scale_x))
+          # Compute the radius on the minimap
+          r = max(2, int(p.radius * scale_x))
 
-            # On "gonfle" le rectangle de la minimap par le rayon du cercle.
-            # Ainsi, on ne rejette le cercle que quand même son bord est sorti.
-            visible_rect = mm_rect.inflate(r * 2, r * 2)
-            if not visible_rect.collidepoint(sx, sy):
-                continue
+          # Inflate the minimap rectangle to not display a planet that is out of bounds
+          visible_rect = mm_rect.inflate(r * 2, r * 2)
+          if not visible_rect.collidepoint(sx, sy):
+              continue
 
-            # Maintenant on dessine, mais pygame.draw.circle déborde naturellement
-            # hors de la minimap si on ne fait rien. Il faut donc "clipper" la surface.
-            # On dit à pygame de n'autoriser le dessin que dans la zone de la minimap.
-            surface.set_clip(mm_rect)
-            pygame.draw.circle(surface, p.color, (sx, sy), r)
-            surface.set_clip(None)  # On relâche le clip pour le reste du rendu
+          # Clip the planets to the surface,
+          # This tells Pygame to draw only in the minimap zone
+          surface.set_clip(mm_rect)
+          pygame.draw.circle(surface, p.color, (sx, sy), r)
+          surface.set_clip(None)
 
-            # Taille du point proportionnelle au rayon de la planète,
-            # mais avec un minimum de 2px pour rester visible
-            r = max(2, int(p.radius * scale_x))
-            pygame.draw.circle(surface, p.color, (sx, sy), r)
+          # Size of the point in correlation with the planet's radius but with a safeguard of 2 pixels
+          r = max(2, int(p.radius * scale_x))
+          pygame.draw.circle(surface, p.color, (sx, sy), r)
 
-            # Afficher le nom si la planète est proche
-            if abs(dx) < VIEW_RANGE * 0.5 and abs(dy) < VIEW_RANGE * 0.5:
-                label = self.font.render(p.name, True, (180, 180, 180))
-                surface.blit(label, (sx + r + 2, sy - 6))
 
-        # Le vaisseau joueur est toujours au centre de la minimap
-        pygame.draw.circle(surface, (255, 255, 255), (center_mm_x, center_mm_y), 4)
+          # Display the name of the planet if we are near
+          if abs(dx) < VIEW_RANGE * 0.5 and abs(dy) < VIEW_RANGE * 0.5:
+              label = self.font.render(p.name, True, (180, 180, 180))
+              surface.blit(label, (sx + r + 2, sy - 6))
 
-        # Optionnel : un petit indicateur de direction du vaisseau
-        rad = math.radians(self.ship.angle - 90)
-        tip_x = int(center_mm_x + math.cos(rad) * 8)
-        tip_y = int(center_mm_y + math.sin(rad) * 8)
-        pygame.draw.line(surface, (255, 255, 100), (center_mm_x, center_mm_y), (tip_x, tip_y), 2)
+      # Player's ship is at the center of the minimap
+      pygame.draw.circle(surface, (255, 255, 255), (center_mm_x, center_mm_y), 4)
+
+      # A small direction indicator
+      rad = math.radians(self.ship.angle - 90)
+      tip_x = int(center_mm_x + math.cos(rad) * 8)
+      tip_y = int(center_mm_y + math.sin(rad) * 8)
+      pygame.draw.line(surface, (255, 255, 100), (center_mm_x, center_mm_y), (tip_x, tip_y), 2)
+
     def renderQuestRadar(self, surface):
       """
-      Renders an arrow, the colour depends on the distance
-      Warning : The arrow can be quite buggy, rely on the color and the minmap !
+      Renders an arrow to the quest destination, the colour depends on the distance
       """
+
       quest = self.game.questManager.getActiveQuestPos()
       if quest is None:
         return

@@ -17,8 +17,6 @@ class Quest:
       Sets a little bit of context for a quest
       All operations are done by the manager
     """
-    if objective == "":
-      self.objective = "No quest tracked"
     self.objective = str(objective) + " from " + str(giver.name) + " for " + str(reward)
     self.giver     = giver
     self.receiver  = receiver

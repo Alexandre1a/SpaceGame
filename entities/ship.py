@@ -5,139 +5,94 @@ import pygame
 
 class ShipControls:
     """
-    Classe qui représente l'état des commandes pour un vaisseau.
-    C'est une structure de données simple qui contient les intentions
-    de contrôle, peu importe d'où elles viennent.
+    A Class that hold imput states for a ship
+    A simple data structure that hold movement intent,
+    from wherever they come from
     """
 
     def __init__(self):
-        self.thrust = False  # Accélérer vers l'avant
-        self.brake = False  # Freiner
-        self.turn_left = False  # Tourner à gauche
-        self.turn_right = False  # Tourner à droite
+        self.thrust = False
+        self.brake = False
+        self.turnLeft = False
+        self.turnRight = False
 
 
 # Controllers (IA et Joueur)
 class KeyboardController:
-    """Convertit les entrées clavier en commandes de vaisseau."""
+    """
+    Convert keyboard inputs to ship commands
+    This is the keybinds
+    """
 
     def getControls(self):
         """
-        Lit l'état du clavier et retourne un objet ShipControls.
+        Reads keyboard state and returns a ShipControls object
         """
         keys = pygame.key.get_pressed()
         controls = ShipControls()
         controls.thrust = keys[pygame.K_z]
-        controls.brake = keys[pygame.K_x]
-        controls.turn_left = keys[pygame.K_q]
-        controls.turn_right = keys[pygame.K_d]
+        controls.brake = keys[pygame.K_s]
+        controls.turnLeft = keys[pygame.K_q]
+        controls.turnRight = keys[pygame.K_d]
         return controls
 
 
 class SimpleAIController:
     """
-    Contrôleur IA basique qui poursuit une cible.
+    Basic AI who follows a target
     """
 
-    def __init__(self, target_pos):
-        self.target_pos = target_pos
+    def __init__(self, targetPos):
+        self.targetPos = targetPos
 
     def getControls(self, ship):
         """
-        Calcule les commandes pour diriger le vaisseau vers la cible.
+        Computes the controls to reach target ship
         """
         controls = ShipControls()
 
-        # Calculer la direction vers la cible
-        to_target = self.target_pos - ship.pos
+        toTarget = self.targetPos - ship.pos
 
-        # Si on est proche, on arrête
-        if to_target.length() < 50:
+        if toTarget.length() < 50:
             controls.brake = True
             return controls
 
-        # Calculer l'angle vers la cible
-        target_angle = math.degrees(math.atan2(to_target.y, to_target.x)) + 90
-        target_angle %= 360
+        targetAngle = math.degrees(math.atan2(toTarget.y, toTarget.x)) + 90
+        targetAngle %= 360
+        angleDiff = (targetAngle - ship.angle + 180) % 360 - 180
 
-        # Calculer la différence d'angle
-        angle_diff = (target_angle - ship.angle + 180) % 360 - 180
+        if angleDiff < -5:
+            controls.turnLeft = True
+        elif angleDiff > 5:
+            controls.turnRight = True
 
-        # Tourner vers la cible
-        if angle_diff < -5:
-            controls.turn_left = True
-        elif angle_diff > 5:
-            controls.turn_right = True
-
-        # Accélérer si on pointe approximativement vers la cible
-        if abs(angle_diff) < 30:
+        if abs(angleDiff) < 30:
             controls.thrust = True
 
         return controls
 
 
 class FollowerAIController(SimpleAIController):
-    """IA qui suit une cible dynamique (le joueur) — on passe la target_pos chaque frame."""
+    """
+    AI that follow a dynamic target,
+    we pass the target pos at each frame
+    """
 
-    def __init__(self, get_target_callable):
-        # get_target_callable: function returning Vector2
-        self.get_target = get_target_callable
+    def __init__(self, getTargetCallable):
+        """
+        getTargetCallable is a function that returns a 2 dimentional Vector
+        """
+        self.getTarget = getTargetCallable
 
     def getControls(self, ship):
-        self.target_pos = self.get_target()
+        self.targetPos = self.getTarget()
         return super().getControls(ship)
-
-
-class AdvancedAIController:
-    """
-    IA qui suit un vaisseau cible, avec accélération progressive,
-    rotation fluide et anticipation de la position du joueur.
-    """
-
-    def __init__(self, target_ship, lookahead_time=0.5):
-        self.target_ship = target_ship
-        self.lookahead_time = lookahead_time  # anticipation
-
-    def getControls(self, ship, dt):
-        controls = ShipControls()
-
-        # Calculer la position anticipée
-        target_future_pos = (
-            self.target_ship.pos + self.target_ship.vel * self.lookahead_time
-        )
-
-        to_target = target_future_pos - ship.pos
-        distance = to_target.length()
-
-        if distance < 50:
-            controls.brake = True
-            return controls
-
-        # Angle vers la cible
-        target_angle = math.degrees(math.atan2(to_target.y, to_target.x)) + 90
-        target_angle %= 360
-
-        # Différence d'angle
-        angle_diff = (target_angle - ship.angle + 180) % 360 - 180
-
-        # Rotation douce
-        turn_threshold = 5
-        if angle_diff < -turn_threshold:
-            controls.turn_left = True
-        elif angle_diff > turn_threshold:
-            controls.turn_right = True
-
-        # Accélération progressive
-        if abs(angle_diff) < 30:
-            controls.thrust = True
-
-        return controls
 
 
 class Ship:
     def __init__(self, name, brand, rank, sprite, accel, maxSpeed, drag, turnSpeed):
         """
-        Cette classe permet de représenter le vaisseau spacial.
+        This Class represents the SpaceShip
         """
         self.name = name
         self.brand = brand
@@ -149,11 +104,15 @@ class Ship:
         self.turnSpeed = turnSpeed
         self.cargo = []
 
-        # Etat du vaisseau
+        # The ship default state
         self.pos = pygame.Vector2(0, 0)
         self.vel = pygame.Vector2(0, 0)
-        self.angle = 90.0  # 0° -> Droit, 90° -> En Haut
+        self.angle = 90.0
 
+
+    #===========
+    #= Getters =
+    #===========
     def getName(self):
         return self.name
 
@@ -177,56 +136,52 @@ class Ship:
 
     def update(self, dt, controls):
         """
-        Met à jour le vaisseau en fonction des commandes reçues.
-
-        :param dt: Delta time (temps écoulé depuis la dernière frame)
-        :param controls: Un objet ShipControls contenant les commandes
+        Update the ship from controllers inputs
+        dt: Delta Time
+        controls: A ShipControls object who has the inputs
         """
-        # Rotation
-        if controls.turn_left:
+        if controls.turnLeft:
             self.angle -= self.turnSpeed * dt
-        if controls.turn_right:
+        if controls.turnRight:
             self.angle += self.turnSpeed * dt
         self.angle %= 360
 
-        # Calcul de la direction avant (angle en radians)
         rad = math.radians(self.angle - 90)
         forward = pygame.Vector2(math.cos(rad), math.sin(rad))
 
-        # Poussée avant
         if controls.thrust:
             self.vel += forward * self.acceleration * dt
 
-        # Freinage spatial
         if controls.brake:
-            speed_sq = self.vel.length_squared()
-            if speed_sq > 0:
-                old_vel = self.vel.copy()
-                brake_dir = -self.vel.normalize()
-                self.vel += brake_dir * self.acceleration * dt
-                # Éviter l'inversion de direction
-                if self.vel.dot(old_vel) < 0:
+            speedSq = self.vel.length_squared()
+            if speedSq > 0:
+                oldVel = self.vel.copy()
+                brakeDir = -self.vel.normalize()
+                self.vel += brakeDir * self.acceleration * dt
+                # Prevent direction inversion
+                if self.vel.dot(oldVel) < 0:
                     self.vel = pygame.Vector2(0, 0)
 
-        # Traînée proportionnelle à v²
+        # Drag (not used atm, could be used to simulate atmo)
         speed_sq = self.vel.length_squared()
         if self.drag > 0 and speed_sq > 0:
             drag_force = -self.vel.normalize() * (self.drag * speed_sq)
             self.vel += drag_force * dt
 
-        # Limitation de la vitesse maximale
+        # Speed Limiter
         if self.vel.length() > self.maxSpeed:
             self.vel.scale_to_length(self.maxSpeed)
 
-        # Mise à jour de la position
         self.pos += self.vel * dt
 
     def render(self, surface, camera_offset, zoom):
         """
-        Affiche le vaisseau à l'écran.
+        Display the ship to the screen
+        surface: The pygame surface to display to
+        camera_offset: the offset of the camera
+        zoom: current zoom, used to scale the sprite
         """
         screen_pos = (self.pos - camera_offset) * zoom
-        # Tourne et scale le sprite
         img = pygame.transform.rotozoom(self.sprite, -self.angle + 90, zoom)
         rect = img.get_rect(center=screen_pos)
         surface.blit(img, rect)

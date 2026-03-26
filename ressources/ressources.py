@@ -1,6 +1,6 @@
 """
-Module de gestion des ressources du jeu.
-Charge et gère les polices, images, sons, etc.
+An asset manager module
+Loads and manages game assets such as fonts, images, sounds, etc.
 """
 
 import os
@@ -9,19 +9,19 @@ import pygame
 
 from entities.ship import Ship
 
-# Répertoire contenant tous les assets du jeu
+# Directories containing all game assets
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
 MUSIC_DIR = os.path.join(os.path.dirname(__file__), "music")
 
 
-# Définition des polices disponibles
+# All fonts available in the game
 FONTS = {
     "default": ("Consolas", 18),
     "title": ("Consolas", 32),
     "small": ("Consolas", 14),
 }
 
-# Définition des images à charger
+# All sprites available in the game
 IMAGES = {
     "gladius": "gladius.png",
     "aurora": "aurora.jpg",
@@ -29,6 +29,7 @@ IMAGES = {
     "600i": "600i.png",
 }
 
+# All music available in the game
 MUSIC = {
   "menu": "menu.ogg",
   "main": "main.wav",
@@ -37,10 +38,10 @@ MUSIC = {
 
 def loadFonts():
     """
-    Charge toutes les polices définies dans FONTS.
+    Loads all fonts defined in "FONTS"
 
     Returns:
-        Dictionnaire {nom: objet pygame.font.Font}
+        Dict {name: object pygame.font.Font}
     """
     fonts = {}
     for key, (name, size) in FONTS.items():
@@ -57,10 +58,10 @@ def loadFonts():
 
 def loadImages():
     """
-    Charge toutes les images définies dans IMAGES.
+    Loads all sprites defined in "IMAGES"
 
     Returns:
-        Dictionnaire {nom: objet pygame.Surface}
+        Dict {name: object pygame.Surface}
     """
     success = 0
     images = {}
@@ -72,7 +73,6 @@ def loadImages():
             success += 1
         except Exception as e:
             print(f"[Resources] Erreur lors du chargement de '{filename}': {e}")
-            # Créer une image de remplacement (carré rouge)
             images[key] = createPlaceholderImage()
 
     print(f"[Resources] {success} images chargées")
@@ -81,30 +81,38 @@ def loadImages():
 
 def createPlaceholderImage(size=(64, 64), color=(255, 0, 255)):
     """
-    Crée une image de remplacement pour les assets manquants.
+    Creates  a placeholder image for missing sprites
 
     Args:
-        size: Tuple (largeur, hauteur) de l'image
-        color: Couleur RGB de l'image
+        size: Tuple (witdh, height) of the image
+        color: RGB color of the image
 
     Returns:
-        Surface pygame remplie de la couleur spécifiée
+      A pygame surface filled with the specified color
     """
     surface = pygame.Surface(size, pygame.SRCALPHA)
     surface.fill(color)
     return surface
 
 def getMusicPath(filename):
+  """
+  Returns the full path of a music file.
+  Args:
+    filename: Name of the file in the assets folder
+
+  Returns:
+    The full path of the music file
+  """
   return os.path.join(MUSIC_DIR, filename)
 
 def getAssetPath(filename):
     """
-    Retourne le chemin complet d'un fichier asset.
+    Returns the full path of an asset file
 
     Args:
-        filename: Nom du fichier dans le dossier assets
+        filename: Name of the file in the assets folder
 
     Returns:
-        Chemin complet vers le fichier
+        The full path of the file
     """
     return os.path.join(ASSET_DIR, filename)

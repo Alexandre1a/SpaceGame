@@ -6,17 +6,10 @@ from ui.button import Button
 
 class StartOptions(Screen):
     def __init__(self, game, width, height, font):
-        """
-        Initialise l'écran de séléction de mode
-
-        Args:
-            game: Référence vers l'objet Game principal
-        """
-
         self.game = game
         self.width = width
         self.height = height
-        self.font = self.game.fonts["default"]
+        self.font = font
         self.data = game.getSaveData()
 
         self.buttons = [
@@ -56,8 +49,7 @@ class StartOptions(Screen):
             vel=pygame.Vector2(0, 0),
             angle=90,
         )
-        self.game.gameScreen.generatePlanets(count=12, spread=8000, minDistance=300)
-        #self.game.gameScreen.generatePlanets(count=2, spread=80, minDistance=300) # Reduce planet gen for testing
+        self.game.gameScreen.generatePlanets(count=1200, spread=80000, minDistance=300)
         self.game.initQuestManager()
         self.game.currentScreen = self.game.gameScreen
 
