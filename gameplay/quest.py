@@ -26,8 +26,11 @@ class Quest:
 
   def toDict(self):
     return {
-      "id" : self.id,
-      "completed" : self.completed
+        "id": self.id,
+        "completed": self.completed,
+        "reward": self.reward,
+        "giver": self.giver.name,
+        "receiver": None,
     }
 
   @classmethod

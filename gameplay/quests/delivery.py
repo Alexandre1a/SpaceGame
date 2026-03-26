@@ -24,3 +24,25 @@ class DeliveryQuest(Quest):
     self.source      = giver # The giver is the source
     self.destination = destination
     self.objective += " to " + str(destination.name)
+
+  def toDict(self):
+      d = super().toDict()
+      d["type"] = "delivery"
+      d["destination"] = self.destination.name
+      return d
+
+  @classmethod
+  def fromDict(cls, data, planets):
+      planet_map = {p.name: p for p in planets}
+      giver = planet_map[data["giver"]]
+      destination = planet_map[data["destination"]]
+      quest = cls(
+          objective="Deliver",
+          giver=giver,
+          receiver=None,
+          reward=data["reward"],
+          destination=destination,
+          id=data["id"]
+      )
+      quest.completed = data["completed"]
+      return quest

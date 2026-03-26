@@ -103,6 +103,25 @@ class QuestManager:
 
   def toDict(self):
     return {
-      "questList": self.questList,
-      "currentQuest": self.currentQuest,
+        "questList": [q.toDict() for q in self.questList],
+        "currentQuestId": self.currentQuest.id if self.currentQuest else None,
     }
+
+  def fromDict(self, data):
+    from gameplay.quests.delivery import DeliveryQuest
+
+    planets = self.game.gameScreen.planets
+    self.questList = []
+
+    for q_data in data["questList"]:
+        if q_data.get("type") == "delivery":
+            quest = DeliveryQuest.fromDict(q_data, planets)
+            self.questList.append(quest)
+
+    current_id = data.get("currentQuestId")
+    if current_id is not None:
+        self.currentQuest = next(
+            (q for q in self.questList if q.id == current_id), None
+        )
+    else:
+        self.currentQuest = None

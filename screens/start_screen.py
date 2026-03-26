@@ -64,7 +64,7 @@ class StartOptions(Screen):
 
         self.game.gameScreen.loadPlanets(self.data["planets"])
         self.game.initQuestManager()
-        if "quest" in self.data:
+        if "quests" in self.data:
           self.game.questManager.fromDict(self.data["quests"])
         self.game.currentScreen = self.game.gameScreen
 
