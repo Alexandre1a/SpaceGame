@@ -61,8 +61,18 @@ class Game:
                 turnSpeed=300,
             ),
             Ship(
+              "Origin",
+              "Luxury",
+              "A",
+              self.images["origin"],
+              accel=1115,
+              maxSpeed=3000,
+              drag=0,
+              turnSpeed=150,
+            ),
+            Ship(
                 "600i",
-                "Origin",
+                "Luxury",
                 "B",
                 self.images["600i"],
                 accel=1250,
@@ -72,7 +82,7 @@ class Game:
             ),
         ]
         # Selects a placeholder ship if none is selected
-        self.selectedShip = self.availableShips[0]
+        self.selectedShip = self.availableShips[1]
 
         # Create the controller for the player to use
         self.controller = KeyboardController()

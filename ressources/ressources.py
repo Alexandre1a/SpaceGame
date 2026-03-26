@@ -24,7 +24,6 @@ FONTS = {
 # All sprites available in the game
 IMAGES = {
     "gladius": "gladius.png",
-    "aurora": "aurora.jpg",
     "origin": "Origin.png",
     "600i": "600i.png",
 }
