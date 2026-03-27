@@ -19,22 +19,22 @@ class PauseMenu(Screen):
 
         self.buttons = [
             Button(
-                "Resume", (self.width // 2, self.height // 2 - 50), self.resume, font
+                "Continuer", (self.width // 2, self.height // 2 - 50), self.resume, font
             ),
             Button(
-                "Save & Quit",
+                "Sauvegarder et Quitter",
                 (self.width // 2, self.height // 2),
                 self.saveAndQuit,
                 font,
             ),
             Button(
-                "Main Menu",
+                "Menu principal",
                 (self.width // 2, self.height // 2 + 50),
                 game.displayMenu,
                 font,
             ),
             Button(
-                "Quit to Desktop",
+                "Quitter vers le bureau",
                 (self.width // 2, self.height // 2 + 100),
                 game.quit,
                 font,

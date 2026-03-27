@@ -1,8 +1,3 @@
-"""
-An asset manager module
-Loads and manages game assets such as fonts, images, sounds, etc.
-"""
-
 import os
 
 import pygame

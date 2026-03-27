@@ -12,7 +12,6 @@ class QuestManager:
     """
     self.game = game
     self.questList = []
-    self.loadQuests()
     self.currentQuest = None
 
   def getActiveQuest(self):
@@ -33,20 +32,11 @@ class QuestManager:
       return None
     return self.currentQuest.destination.pos
 
-  def loadQuests(self):
-    """
-    Loads quests from the save,
-    generate them if there is no save
-    """
-    self.data = self.game.getSaveData()
-    if self.data is None:
-      for i in range(len(self.game.gameScreen.planets)):
-        quest = DeliveryQuest("Deliver", self.game.gameScreen.planets[i], self.game, 10, random.choice(self.game.gameScreen.planets), i)
-        self.questList.append(quest)
-      print("[QuestManager] Generated ", len(self.questList), "quests with destination", [q.destination.name for q in self.questList], "\nand source ", [q.giver.name for q in self.questList]," and id ", [p.id for p in self.questList])
-    else:
-      # Todo
-      pass
+  def generateQuests(self):
+    for i in range(len(self.game.gameScreen.planets)):
+      quest = DeliveryQuest("Deliver", self.game.gameScreen.planets[i], self.game, 10, random.choice(self.game.gameScreen.planets), i)
+      self.questList.append(quest)
+    print("[QuestManager] Generated ", len(self.questList), " quests")
 
   def checkPlanetIsGiver(self, planet) -> bool:
     """
@@ -89,17 +79,14 @@ class QuestManager:
 
 
   def completeQuest(self, planet):
-    print("[QuestManager] Attempting to complete quest...")
-    if planet.name == self.currentQuest.destination.name:
+   if planet.name == self.currentQuest.destination.name:
       if not self.currentQuest.completed:
         self.currentQuest.completed = True
-        print("[QuestManager] Completed ", self.currentQuest.objective)
         self.game.phtonos.add(self.game, self.currentQuest.reward)
         planet.buttons[1].setDisabled(True)
         self.currentQuest = None
       else:
         planet.buttons[1].setDisabled(True)
-    print("[QuestManager] Current global quest states:\n", [q.destination.name for q in self.questList], '\n', [q.giver.name for q in self.questList], '\n', [p.id for p in self.questList], '\n', [p.completed for p in self.questList])
 
   def toDict(self):
     return {

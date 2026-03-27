@@ -51,14 +51,14 @@ class Game:
         # Create available ships
         self.availableShips = [
             Ship(
-                "TestShip",
-                "Admin",
-                "S",
+                "Gladius",
+                "Fighter",
+                "A",
                 self.images["gladius"],
                 accel=1250,
-                maxSpeed=5000,
+                maxSpeed=3000,
                 drag=0,
-                turnSpeed=300,
+                turnSpeed=200,
             ),
             Ship(
               "Origin",
@@ -75,14 +75,14 @@ class Game:
                 "Luxury",
                 "B",
                 self.images["600i"],
-                accel=1250,
+                accel=150,
                 maxSpeed=2000,
                 drag=0,
                 turnSpeed=120,
             ),
         ]
         # Selects a placeholder ship if none is selected
-        self.selectedShip = self.availableShips[1]
+        self.selectedShip = self.availableShips[0]
 
         # Create the controller for the player to use
         self.controller = KeyboardController()

@@ -8,7 +8,7 @@ import random
 
 # Custom
 from entities.planet import Planet, PLANET_TYPE
-from entities.ship import FollowerAIController, Ship
+from entities.ship import Ship
 from screens.base_screen import Screen
 from ui.button import Button
 from ressources.ressources import getMusicPath
@@ -59,7 +59,6 @@ class GameScreen(Screen):
 
     def loadPlanets(self, planets):
         self.planets = planets
-        print("[Game] Loaded plannets", [p.name for p in self.planets])
 
     #==================
     #= Procedural Gen =
@@ -101,7 +100,6 @@ class GameScreen(Screen):
                     if attempts % 20 == 0:
                         currentMinDistance = max(50, currentMinDistance - 50)
 
-        print("[Game] Generated planets", [p.name for p in self.planets], "\nat coordinates :\nx:\t", [p.pos.x for p in self.planets], "\ny:\t", [p.pos.y for p in self.planets])
         print(f"[Game] Generated {len(self.planets)} plannets")
 
     def handleEvent(self, event):

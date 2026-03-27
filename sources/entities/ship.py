@@ -17,7 +17,7 @@ class ShipControls:
         self.turnRight = False
 
 
-# Controllers (IA et Joueur)
+# Controller
 class KeyboardController:
     """
     Convert keyboard inputs to ship commands
@@ -35,58 +35,6 @@ class KeyboardController:
         controls.turnLeft = keys[pygame.K_q]
         controls.turnRight = keys[pygame.K_d]
         return controls
-
-
-class SimpleAIController:
-    """
-    Basic AI who follows a target
-    """
-
-    def __init__(self, targetPos):
-        self.targetPos = targetPos
-
-    def getControls(self, ship):
-        """
-        Computes the controls to reach target ship
-        """
-        controls = ShipControls()
-
-        toTarget = self.targetPos - ship.pos
-
-        if toTarget.length() < 50:
-            controls.brake = True
-            return controls
-
-        targetAngle = math.degrees(math.atan2(toTarget.y, toTarget.x)) + 90
-        targetAngle %= 360
-        angleDiff = (targetAngle - ship.angle + 180) % 360 - 180
-
-        if angleDiff < -5:
-            controls.turnLeft = True
-        elif angleDiff > 5:
-            controls.turnRight = True
-
-        if abs(angleDiff) < 30:
-            controls.thrust = True
-
-        return controls
-
-
-class FollowerAIController(SimpleAIController):
-    """
-    AI that follow a dynamic target,
-    we pass the target pos at each frame
-    """
-
-    def __init__(self, getTargetCallable):
-        """
-        getTargetCallable is a function that returns a 2 dimentional Vector
-        """
-        self.getTarget = getTargetCallable
-
-    def getControls(self, ship):
-        self.targetPos = self.getTarget()
-        return super().getControls(ship)
 
 
 class Ship:

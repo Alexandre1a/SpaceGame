@@ -14,19 +14,19 @@ class StartOptions(Screen):
 
         self.buttons = [
             Button(
-              "New Game",
+              "Nouvelle Partie",
               (self.width // 2, self.height // 2 - 50),
               self.newGame,
               font
             ),
             Button(
-                "Load Game",
+                "Charger la partie",
                 (self.width // 2, self.height // 2),
                 self.loadGame,
                 font,
             ),
             Button(
-                "Back",
+                "Retour",
                 (self.width // 2, self.height // 2 + 50),
                 self.game.displayMenu,
                 font,
@@ -51,6 +51,7 @@ class StartOptions(Screen):
         )
         self.game.gameScreen.generatePlanets(count=1200, spread=80000, minDistance=300)
         self.game.initQuestManager()
+        self.game.questManager.generateQuests()
         self.game.currentScreen = self.game.gameScreen
 
     def loadGame(self):
@@ -74,7 +75,7 @@ class StartOptions(Screen):
 
     def render(self, surface):
         surface.fill((0, 0, 0))
-        self.text = self.font.render("Chose an option", True, (255, 255, 255))
+        self.text = self.font.render("Choisissez une option", True, (255, 255, 255))
         surface.blit(self.text, (surface.get_width() // 2 - 100, 100))
         for btn in self.buttons:
             btn.render(surface)

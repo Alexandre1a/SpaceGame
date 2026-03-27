@@ -31,8 +31,6 @@ def saveGame(game):
     with gzip.open(SAVE_FILE, "wb") as f:
         f.write(json.dumps(data).encode("utf-8"))
     print("[SaveManager] Game saved (gzipped).")
-    print("[SaveManager] Saved data:", data)
-
 
 def loadSave(game):
     if not os.path.exists(SAVE_FILE):
@@ -48,5 +46,4 @@ def loadSave(game):
 
     data["planets"] = [deserializePlanet(p) for p in data["planets"]]
 
-    print("[SaveManger] Loaded data: ", data)
     return data
